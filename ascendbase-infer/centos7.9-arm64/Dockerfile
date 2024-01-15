@@ -1,10 +1,13 @@
-FROM centos:7.9
+FROM centos:7
 
 ARG LIBSTDCXX=libstdc++.so.6.0.24
 WORKDIR /tmp
 COPY . ./
 
-RUN yum update -y && \
+RUN sed -i "s@gpgcheck=1@gpgcheck=0@g" /etc/yum.repos.d/CentOS-Base.repo && \
+    sed -i "s@mirrorlist@#mirrorlist@g" /etc/yum.repos.d/CentOS-Base.repo && \
+    sed -i "s@#baseurl=http://mirror.centos.org/altarch@baseurl=http://mirrors.huaweicloud.com/centos-altarch@g" /etc/yum.repos.d/CentOS-Base.repo && \
+    yum update -y && \
     yum makecache && \
     yum install -y pciutils && \
     yum clean all && \

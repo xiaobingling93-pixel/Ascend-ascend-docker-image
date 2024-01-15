@@ -13,7 +13,7 @@ RUN umask 0022 && \
     tar -zxvf mpich-3.2.1.tar.gz && \
     cd mpich-3.2.1 && \
     ./configure --prefix=/usr/local/mpich-3.2.1 && \
-    make && \
+    make -j 20 && \
     make install && \
     cd $TOOLKIT_PATH/tools/hccl_test && \
     make MPI_HOME=/usr/local/mpich-3.2.1 ASCEND_DIR=$TOOLKIT_PATH/x86_64-linux

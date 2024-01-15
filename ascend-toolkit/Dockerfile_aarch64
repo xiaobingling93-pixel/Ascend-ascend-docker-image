@@ -1,10 +1,13 @@
 ARG BASE_VERSION
 ARG BASE=ascendbase-toolkit:$BASE_VERSION
+
+FROM ubuntu:18.04 as buildtemp
+COPY . /tmp
+
 FROM $BASE
 
 ARG CHIP=all
 WORKDIR /tmp
-COPY . ./
 
 # 1. 驱动路径环境变量设置
 ARG ASCEND_BASE=/usr/local/Ascend
@@ -22,7 +25,8 @@ ARG TOOLKIT_PATH=$ASCEND_BASE/ascend-toolkit/latest
 
 # 安装TOOLKIT
 
-RUN umask 0022 && \
+RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
+    umask 0022 && \
     mkdir -p $ASCEND_BASE/driver && \
     if [ "$CHIP" != "all" ]; \
     then \
@@ -32,8 +36,7 @@ RUN umask 0022 && \
     fi && \
     chmod +x $TOOLKIT_PKG && \
     ./$TOOLKIT_PKG --quiet --install --install-path=$ASCEND_BASE --install-for-all $CHIPOPTION && \
-    bash /tmp/Ascend-cann-kernels-910_*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
-    bash /tmp/Ascend-cann-kernels-910b_*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
+    bash /tmp/Ascend-cann-kernels-*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
     rm -f $TOOLKIT_PKG
 
 # TOOLKIT环境变量

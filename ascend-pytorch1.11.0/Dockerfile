@@ -1,18 +1,19 @@
 ARG BASE_VERSION
 ARG BASE=ascend-toolkit:$BASE_VERSION
+FROM ubuntu:18.04 as buildtemp
+COPY . /tmp
+
 FROM $BASE
 
 WORKDIR /tmp
-COPY . ./
-
 SHELL ["/bin/bash","-c"]
 
 # 安装torch
-RUN umask 0022 && \
+RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
+    umask 0022 && \
     groupadd  HwHiAiUser -g 1000 && \
     useradd -d /home/HwHiAiUser -u 1000 -g 1000 -m -s /bin/bash HwHiAiUser && \
     pip3 install --upgrade /tmp/torch_npu*.whl && \
-    pip3 install --upgrade /tmp/apex-0.1_ascend*.whl && \
     pip3 install --upgrade /tmp/torch-*.whl && \
     pip3 install mmcv==1.7.0 && \
     pip3 install urllib3==1.26.6 && \

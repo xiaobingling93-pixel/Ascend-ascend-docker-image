@@ -1,11 +1,14 @@
-FROM centos:7.9
+FROM centos:7
 
 ARG LIBSTDCXX=libstdc++.so.6.0.24
 WORKDIR /tmp
 COPY . ./
 
 # 安装编译环境
-RUN yum -y update && \
+RUN sed -i "s@gpgcheck=1@gpgcheck=0@g" /etc/yum.repos.d/CentOS-Base.repo && \
+    sed -i "s@mirrorlist@#mirrorlist@g" /etc/yum.repos.d/CentOS-Base.repo && \
+    sed -i "s@#baseurl=http://mirror.centos.org/altarch@baseurl=http://mirrors.huaweicloud.com/centos-altarch@g" /etc/yum.repos.d/CentOS-Base.repo && \
+    yum -y update && \
     yum makecache && \
     yum -y install centos-release-scl && \
     yum -y install devtoolset-7 && \
@@ -27,7 +30,7 @@ ENV LD_LIBRARY_PATH=/usr/local/python3.7.5/lib: \
 RUN umask 0022  && \
     wget https://repo.huaweicloud.com/python/3.7.5/Python-3.7.5.tar.xz && \
     tar -xf Python-3.7.5.tar.xz && cd Python-3.7.5 && ./configure --prefix=/usr/local/python3.7.5 --enable-shared && \
-    make && make install && \
+    make -j 20 && make install && \
     ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python3 && \
     ln -sf /usr/local/python3.7.5/bin/pip3 /usr/bin/pip3 && \
     cd .. && \

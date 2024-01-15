@@ -1,9 +1,9 @@
 #!/bin/bash
 
-version=23.0.RC3
+version=23.0.0
 
-cp -r /usr1/package930/Ascend-cann-nnrt_*_linux-aarch64.run .
-cp -r /usr1/package930/Ascend-cann-toolkit_*_linux-aarch64.run .
+cp -r /usr1/package/Ascend-cann-nnrt_*_linux-aarch64.run .
+cp -r /usr1/package/Ascend-cann-toolkit_*_linux-aarch64.run .
 
 #检查cann
 have_nnrt=$(find . | grep "nnrt" | grep "linux-aarch64" | wc -l )
