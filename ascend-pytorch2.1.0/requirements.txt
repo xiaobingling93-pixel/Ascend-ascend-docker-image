@@ -1,0 +1,16 @@
+numpy
+decorator
+sympy==1.4
+cffi==1.12.3
+pyyaml
+pathlib2
+attrs
+attr
+scipy
+requests
+psutil
+absl-py
+mmcv==1.7.0
+yapf==0.40.1
+protobuf==3.19.0
+matplotlib
