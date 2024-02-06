@@ -1,9 +1,9 @@
 #!/bin/bash
 
 declare -i node_num=$(grep -v "^#" hostfile | grep -v "^$" | wc -l)
-declare -i npu_per_sever=$(grep grep -v "^#" hostfile | grep -v "^$" | head -n 1 | awk -F ":" '{print $2}')
+declare -i npu_per_sever=$(grep -v "^#" hostfile | grep -v "^$" | head -n 1 | awk -F ":" '{print $2}' | tr -d [:blank:])
 device_size=`expr $node_num \* $npu_per_sever`
-net_name=$(ip addr | grep -B 2 `hostname -I | awk '{print $1}'` | head -n 1 | awk -F: '{print $2}' | tr -d [:blank:])
+net_name=$(ip addr | grep -B 2 `hostname -I | awk '{print $1}'` | tail -n 1 | awk '{print $NF}' | tr -d [:blank:])
 
 export HCCL_SOCKET_IFNAME=$net_name
 

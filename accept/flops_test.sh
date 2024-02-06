@@ -26,11 +26,15 @@ if [ $cmd_ret -eq 0 ]; then
     echo "container exist"
     docker rm accept
   fi
-  get_davincis=$(find /dev -name 'davinci[0-9]+')
+  get_davincis=$(find /dev -name 'davinci[0-9]*')
   mount_davincis="--device=/dev/davinci_manager --device=/dev/devmm_svm --device=/dev/hisi_hdc"
   for i in $get_davincis;do mount_davincis="$mount_davincis --device=$i";done
   docker run --rm -it --shm-size=16g --ipc=host --net=host --name=accept $mount_davincis \
-   -v /usr/local:/usr/local -v /home/hwtest:/home/hwtest accept:6.0.RC1-ubuntu18.04 /bin/bash -c "bash /home/hwtest/flops/flops_test.sh; while true; do sleep 10; done"
+  -v /usr/local/sbin/npu-smi:/usr/local/sbin/npu-smi \
+  -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
+  -v /usr/local/Ascend/add-ons/:/usr/local/Ascend/add-ons \
+  -v /home/hwtest:/home/hwtest \
+  accept:6.0.RC1-ubuntu18.04 /bin/bash -c "bash /home/hwtest/flops/flops_test.sh; while true; do sleep 10; done"
 else
   #  docker命令不存在，当前在容器内
   cd /home/HwHiAiUser/flops

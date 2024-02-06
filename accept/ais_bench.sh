@@ -38,20 +38,21 @@ if [ $cmd_ret -eq 0 ]; then
     echo "container exist"
     docker rm accept
   fi
-  get_davincis=$(find /dev -name 'davinci[0-9]+')
+  get_davincis=$(find /dev -name 'davinci[0-9]*')
   npu_per_node=$(echo "$get_davincis" | wc -l)
-  cd ./config && python3 hccl_tools.py $npu_per_node $npu_per_node && cd ..
+  cd ./config && python3 hccl_tools.py $npu_per_node $npu_per_node && sleep 5 && cd ..
+  rank_table=`pwd`/config/hccl.json
   mount_davincis="--device=/dev/davinci_manager --device=/dev/devmm_svm --device=/dev/hisi_hdc"
   for i in $get_davincis;do mount_davincis="$mount_davincis --device=$i";done
   ais_bert_log_dir=/home/HwHiAiUser/samples/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-${arch}-1.0-r2.2/log
   ais_resnet_log_dir=/home/HwHiAiUser/samples/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-${arch}-1.0-r2.2/log
-  data_path="-v $RANK_TABLE_FILE:/home/HwHiAiUser/$(basename "$RANK_TABLE_FILE") -v $TRAIN_DATA_PATH:/home/HwHiAiUser/$(basename "$TRAIN_DATA_PATH") -v $EVAL_DATA_PATH:/home/HwHiAiUser/$(basename "$EVAL_DATA_PATH")"
+  data_path="-v $rank_table:/home/HwHiAiUser/$(basename "$rank_table") -v $TRAIN_DATA_PATH:/home/HwHiAiUser/$(basename "$TRAIN_DATA_PATH") -v $EVAL_DATA_PATH:/home/HwHiAiUser/$(basename "$EVAL_DATA_PATH")"
   if [ $TYPE == "bert-large" ]; then
     data_path="$data_path -v $PRETRAIN_MODEL_PATH:/home/HwHiAiUser/$(basename "$PRETRAIN_MODEL_PATH")"
   fi
   mkdir -p ~/ais_log/resnet_log ~/ais_log/bert_log
   chown -R HwHiAiUser:HwHiAiUser ~/ais_log/resnet_log ~/ais_log/bert_log
-  docker run --rm -it --shm-size=16g --ipc=host --net=host --name=accept $mount_davincis \
+  docker run --rm -it --shm-size=16g --ipc=host --net=host --name=accept $mount_davincis $data_path \
   -v /etc/ascend_install.info:/etc/ascend_install.info \
   -v /etc/hccn.conf:/etc/hccn.conf \
   -v /usr/local/sbin/npu-smi:/usr/local/sbin/npu-smi \

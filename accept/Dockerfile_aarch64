@@ -19,7 +19,7 @@ RUN echo "deb [trusted=yes] https://repo.huaweicloud.com/ubuntu-ports/ bionic ma
     apt-get -o "Acquire::https::Verify-Peer=false" install -y --no-install-recommends wget vim sudo openssl \
     libnuma1 curl g++ libfreetype6-dev pkg-config libpng-dev unzip libblas3 liblapack3 liblapack-dev libblas-dev \
     gfortran libhdf5-dev libffi-dev libicu60 libxml2 2to3 python3-lib2to3 python3-toolz libgl1-mesa-glx \
-    libsqlite3-dev libbz2-dev libssl-dev less htop liblzma-dev make zlib1g zlib1g-dev \
+    libsqlite3-dev libbz2-dev libssl-dev less htop liblzma-dev make zlib1g zlib1g-dev iproute2 \
     bc gcc xz-utils libopenblas-dev libgmpxx4ldbl pciutils net-tools git cython3 python3-h5py && apt clean && rm -rf /var/lib/apt/lists/*
 
 ENV LD_LIBRARY_PATH=/usr/local/python3.7.5/lib: \

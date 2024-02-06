@@ -27,7 +27,7 @@ if [ $cmd_ret -eq 0 ]; then
     echo "container exist"
     docker rm accept
   fi
-  get_davincis=$(find /dev -name 'davinci[0-9]+')
+  get_davincis=$(find /dev -name 'davinci[0-9]*')
   mount_davincis="--device=/dev/davinci_manager --device=/dev/devmm_svm --device=/dev/hisi_hdc"
   for i in $get_davincis;do mount_davincis="$mount_davincis --device=$i";done
   docker run --rm -it --shm-size=16g --ipc=host --net=host --name=accept $mount_davincis \

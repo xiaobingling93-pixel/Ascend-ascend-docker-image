@@ -16,12 +16,12 @@ class BenchMark:
         try:
             self.type, self.train_data_path, self.eval_data_path = sys.argv[1:-1]
             self.pre_model_path = sys.argv[-1]
-            code_dir_list = glob.glob(f"{self.root_dir}/*mindspore_bert*{self.arch}*")
+            code_dir_list = glob.glob(f"{self.root_dir}/samples/*mindspore_bert*{self.arch}*")
         except ValueError:
             self.type, self.train_data_path, self.eval_data_path = sys.argv[1:]
-            code_dir_list = glob.glob(f"{self.root_dir}/*mindspore_resnet*{self.arch}*")
+            code_dir_list = glob.glob(f"{self.root_dir}/samples/*mindspore_resnet*{self.arch}*")
         self.code_dir = code_dir_list[0]
-        self.rank_table_file = f"{os.path.dirname(self.root_dir)}/hccl.json"
+        self.rank_table_file = f"{self.root_dir}/hccl.json"
 
     def _modify_config_file(self):
         config_file_path = f"{self.code_dir}/code/config/config.sh"

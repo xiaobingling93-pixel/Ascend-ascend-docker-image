@@ -1,7 +1,7 @@
 #!/bin/bash
 source env_npu.sh
 
-GPUS_PER_NODE=$(find /dev -name 'davinci[0-9]+' | wc -l)
+GPUS_PER_NODE=$(find /dev -name 'davinci[0-9]*' | wc -l)
 MASTER_ADDR=$(grep "master"  node_rank | awk '{print $1}')
 MASTER_PORT=60076
 LOCAL_ADDR=$(hostname -I | awk '{print $1}')

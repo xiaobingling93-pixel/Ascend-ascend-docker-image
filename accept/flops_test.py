@@ -81,7 +81,7 @@ def get_chip_name_list(npu_number):
 
 
 def get_npu_count():
-    npu_number = len(glob.glob("/dev/davinci[0-9]+"))
+    npu_number = len(glob.glob("/dev/davinci[0-9]*"))
     if npu_number == 0:
         raise FileNotFoundError("davinci device is not exists")
     return npu_number
