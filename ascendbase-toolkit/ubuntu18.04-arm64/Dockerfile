@@ -4,7 +4,8 @@ WORKDIR /tmp
 COPY . ./
 
 # 系统包 + Pip3.7
-RUN apt update && \
+RUN sed -i 's@http://.*.ubuntu.com@http://mirrors.huaweicloud.com@g' /etc/apt/sources.list && \
+    apt update && \
     apt install --no-install-recommends ca-certificates -y && \
     apt install --no-install-recommends bc wget -y && \
     apt install --no-install-recommends curl gcc make g++ pkg-config unzip -y && \
@@ -22,7 +23,7 @@ ENV LD_LIBRARY_PATH=/usr/local/python3.7.5/lib: \
 RUN umask 0022  && \
     wget https://repo.huaweicloud.com/python/3.7.5/Python-3.7.5.tar.xz && \
     tar -xf Python-3.7.5.tar.xz && cd Python-3.7.5 && ./configure --prefix=/usr/local/python3.7.5 --enable-shared && \
-    make && make install && \
+    make -j 20 && make install && \
     ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python3 && \
     ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python && \
     ln -sf /usr/local/python3.7.5/bin/pip3 /usr/bin/pip3 && \

@@ -18,26 +18,6 @@ function parse_script_args()
             image=$(echo "$1" | cut -d"=" -f2)
             if [[ "${image}" = "mindspore" ]]; then
                 build_image mindspore-modelzoo
-            elif [[ "${image}" = "pytorch" ]]; then
-                build_image pytorch-modelzoo
-            elif [[ "${image}" = "pytorch1.11.0" ]]; then
-                build_image pytorch1.11.0-modelzoo
-            elif [[ "${image}" = "tensorflow" ]]; then
-                build_image tensorflow-modelzoo
-            elif [[ "${image}" = "tensorflow265" ]]; then
-                build_image tensorflow2.6.5-modelzoo
-            elif [[ "${image}" = "infer-mxvision" ]]; then
-                build_image infer-modelzoo-mxvision
-            elif [[ "${image}" = "all-in-one" ]]; then
-                build_image all-in-one
-            elif [[ "${image}" = "all" ]]; then
-                build_image mindspore-modelzoo
-                build_image pytorch-modelzoo
-                build_image pytorch1.11.0-modelzoo
-                build_image tensorflow-modelzoo
-                build_image tensorflow2.6.5-modelzoo
-                build_image infer-modelzoo-mxvision
-                build_image all-in-one
             else
                 echo "Please check the parameter of --modelzoo"
                 exit 1
@@ -46,16 +26,15 @@ function parse_script_args()
             ;;
         --common=*)
             image=$(echo "$1" | cut -d"=" -f2)
-            if [[ "${image}" = "algorithm" ]]; then
-                build_image ascend-algorithm
-            elif [[ "${image}" = "infer" ]]; then
+            arch=$(arch)
+            if [[ "${image}" = "infer" ]]; then
                 build_image ascend-infer
             elif [[ "${image}" = "mindspore" ]]; then
                 build_image ascend-mindspore
-            elif [[ "${image}" = "pytorch" ]]; then
-                build_image ascend-pytorch
             elif [[ "${image}" = "pytorch1.11.0" ]]; then
                 build_image ascend-pytorch1.11.0
+            elif [[ "${image}" = "pytorch2.1.0" ]]; then
+                build_image ascend-pytorch2.1.0
             elif [[ "${image}" = "tensorflow" ]]; then
                 build_image ascend-tensorflow
             elif [[ "${image}" = "toolkit" ]]; then
@@ -69,20 +48,23 @@ function parse_script_args()
             elif [[ "${image}" = "cluster" ]]; then
                 build_image cluster-flops-test
             elif [[ "${image}" = "infer-310b" ]]; then
+              if [[ "${arch}" = "aarch64" ]]; then
                 build_image ascend-infer-310b
+              fi
             elif [[ "${image}" = "all" ]]; then
                 build_image ascendbase-toolkit
                 build_image ascendbase-infer
-                build_image ascend-algorithm
                 build_image ascend-infer
+                if [[ "${arch}" = "aarch64" ]]; then
+                  build_image ascend-infer-310b
+                fi
                 build_image ascend-toolkit
                 build_image ascend-mindspore
-                build_image ascend-pytorch
                 build_image ascend-pytorch1.11.0
+                build_image ascend-pytorch2.1.0
                 build_image ascend-tensorflow
                 build_image hccl-test
-                build_image cluster
-                build_image ascend-infer-310b
+                build_image cluster-flops-test
             else
                 echo "Please check the parameter of --common"
                 exit 1
@@ -116,23 +98,16 @@ Command: run-build-images.sh [OPTIONS]...
 Options:
     -h, --help                    Displays the help information.
     --modelzoo= mindspore         Specifies the modelzoo image to be created.
-                pytorch
-                pytorch1.11.0
-                tensorflow
-                tensorflow265
-                infer
-                infer-mxvision
-                all-in-one
-                all
-    --common=   algorithm          Specifies the common image to be created. 
-                infer
-                modelzoo
-                pytorch
-                pytorch1.11.0
-                tensorflow
-                toolkit
-                base-infer
+
+    --common=   base-infer        Specifies the common image to be created.
                 base-toolkit
+                toolkit
+                infer
+                infer-310b
+                mindspore
+                pytorch1.11.0
+                pytorch2.1.0
+                tensorflow
                 hccl-test
                 cluster
                 all

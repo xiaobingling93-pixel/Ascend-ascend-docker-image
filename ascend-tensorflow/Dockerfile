@@ -1,9 +1,10 @@
 ARG BASE_VERSION
 ARG BASE=ascend-toolkit:$BASE_VERSION
+FROM ubuntu:18.04 as buildtemp
+COPY . /tmp
 FROM $BASE
 
 WORKDIR /tmp
-COPY . ./
 
 # TF相关安装
 ARG TFPLUGIN_PKG=Ascend-cann-tfplugin*.run
@@ -14,7 +15,8 @@ ARG TF_PLUGIN_PATH=$ASCEND_BASE/tfplugin/latest
 SHELL ["/bin/bash","-c"]
 
 # 安装TFPLUGIN包和TF
-RUN umask 0022 && \
+RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
+    umask 0022 && \
     groupadd  HwHiAiUser -g 1000 && \
     useradd -d /home/HwHiAiUser -u 1000 -g 1000 -m -s /bin/bash HwHiAiUser && \
     mkdir -p $ASCEND_BASE/driver && \
@@ -24,7 +26,7 @@ RUN umask 0022 && \
     ./$TFPLUGIN_PKG --quiet --install --install-for-all --force && \
     rm -f ./$TFPLUGIN_PKG && \
     pip3 install $TF_PKG && \
-    pip3 install -U protobuf==3.20.0 && \
+    pip3 install -U protobuf==3.19.0 && \
     rm -rf /root/.cache/pip && \
     rm -rf $ASCEND_BASE/driver && \
     rm -f /etc/ascend_install.info

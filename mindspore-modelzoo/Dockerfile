@@ -28,7 +28,7 @@ ENV LD_LIBRARY_PATH=/usr/local/python3.7.5/lib: \
 RUN umask 0022  && \
     curl -k https://repo.huaweicloud.com/python/3.7.5/Python-3.7.5.tar.xz -o Python-3.7.5.tar.xz && \
     tar -xf Python-3.7.5.tar.xz && cd Python-3.7.5 && ./configure --prefix=/usr/local/python3.7.5 --enable-shared && \
-    make && make install && \
+    make -j 20 && make install && \
     ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python3 && \
     ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python && \
     ln -sf /usr/local/python3.7.5/bin/pip3 /usr/bin/pip3 && \
@@ -38,8 +38,7 @@ RUN umask 0022  && \
     mkdir -p ~/.pip  && \
     echo '[global] \n\
     index-url=http://mirrors.aliyun.com/pypi/simple/\n\
-    trusted-host=mirrors.aliyun.com' >> ~/.pip/pip.conf && \
-    pip3 install pip -U
+    trusted-host=mirrors.aliyun.com' >> ~/.pip/pip.conf
 
 # HwHiAiUser
 RUN groupadd  HwHiAiUser -g 1000 && \
@@ -76,8 +75,8 @@ $LD_LIBRARY_PATH
 # CANN包
 RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     umask 0022  && \
-    chmod +x /tmp/*.run && \
     bash /tmp/Ascend-cann-toolkit*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
+    bash /tmp/Ascend-cann-kernels-910_*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
     bash /tmp/Ascend-cann-kernels-910b_*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
     bash /tmp/Ascend-mindx-toolbox*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
 # TRAIN_FRAMEWORK安装
