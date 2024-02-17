@@ -116,7 +116,9 @@ RUN apt-get update && \
 # gpt3模型数据
 RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     umask 0022 && \
-    cd /tmp/Megatron-LM/megatron-npu && \
+    cp /tmp/Megatron-LM/ /home/HwHiAiUser/distributed/Megatron-LM && \
+    chown -R HwHiAiUser:HwHiAiUser /home/HwHiAiUser/distributed/Megatron-LM && \
+    cd /home/HwHiAiUser/distributed/Megatron-LM/megatron_npu && \
     pip3 install -e . && \
     pip3 install -r requirements.txt && \
     pip3 install psutil && \
@@ -131,7 +133,6 @@ COPY --chown=HwHiAiUser:HwHiAiUser Open_Source_Software_Notice.txt /home/HwHiAiU
 COPY --chown=HwHiAiUser:HwHiAiUser hccl_run.sh /home/HwHiAiUser/hccl/hccl_run.sh
 COPY --chown=HwHiAiUser:HwHiAiUser run_ais.py /home/HwHiAiUser/ais/run_ais.py
 COPY --chown=HwHiAiUser:HwHiAiUser flops_test.py /home/HwHiAiUser/flops/flops_test.py
-COPY --chown=HwHiAiUser:HwHiAiUser Megatron-LM /home/HwHiAiUser/distributed/Megatron-LM
 COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-aarch64-1.0-r2.2 /home/HwHiAiUser/samples/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-aarch64-1.0-r2.2
 COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-aarch64-1.0-r2.2 /home/HwHiAiUser/samples/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-aarch64-1.0-r2.2
 

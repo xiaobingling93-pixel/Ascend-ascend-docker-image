@@ -44,15 +44,14 @@ else
   cd /home/HwHiAiUser/distributed/Megatron-LM/megatron_npu/tests_gpt
   rm -rf checkpoint_dist
   rm -rf kernel_meta_*
-  rm -rf /root/ascend/log
   rm -f pretrain_gpt_distributed_bf16_test.sh
   rm -f node_rank
   cp /home/hwtest/config/node_rank ./
   cp /home/hwtest/distributed/pretrain_gpt_distributed_bf16_test.sh ./
-  chmod +x pretrain_gpt_distributed_bf16.sh
+  chmod +x pretrain_gpt_distributed_bf16_test.sh
   source /usr/local/Ascend/ascend-toolkit/set_env.sh
   export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
   export PATH=/usr/local/python3.7.5/bin:$PATH
   export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
-  bash pretrain_gpt_distributed_bf16.sh --pre_tokensckens=2048 --next_tockens=0 --shape_order=SBH > /home/hwtest/distributed/train_auto.log 2>&1 &
+  bash pretrain_gpt_distributed_bf16_test.sh --pre_tokensckens=2048 --next_tockens=0 --shape_order=SBH > /home/hwtest/distributed/train_auto.log 2>&1 &
 fi

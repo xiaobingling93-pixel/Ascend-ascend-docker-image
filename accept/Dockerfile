@@ -116,7 +116,9 @@ RUN apt-get update && \
 # gpt3模型数据
 RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     umask 0022 && \
-    cd /tmp/Megatron-LM/megatron-npu && \
+    cp /tmp/Megatron-LM/ /home/HwHiAiUser/distributed/Megatron-LM && \
+    chown -R HwHiAiUser:HwHiAiUser /home/HwHiAiUser/distributed/Megatron-LM && \
+    cd /home/HwHiAiUser/distributed/Megatron-LM/megatron_npu && \
     pip3 install -e . && \
     pip3 install -r requirements.txt && \
     pip3 install psutil && \
