@@ -41,9 +41,9 @@ class BenchMark:
                 if "RANK_TABLE_FILE" in v:
                     content[i] = f"export RANK_TABLE_FILE={self.rank_table_file}\n"
                 if "RANK_SIZE" in v:
-                    content[i] = f"export RANK_SIZE={npu_number}"
+                    content[i] = f"export RANK_SIZE={npu_number}\n"
                 if "DEVICE_NUM" in v:
-                    content[i] = f"export DEVICE_NUM={npu_number}"
+                    content[i] = f"export DEVICE_NUM={npu_number}\n"
             f.seek(0)
             f.truncate()
             f.writelines(content)
