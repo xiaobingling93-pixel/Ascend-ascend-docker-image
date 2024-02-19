@@ -44,7 +44,7 @@
 ```
 2. 执行`source test_model.sh flops-test`。
 3. 检查执行日志，日志位于/home/hwtest/flops/flops_test.log。
-
+4. 确保所有数据集和文件的属主为HwHiAiUser。
 ## 集群训练
 
 集群训练支持gpt3模型，数据集为enwiki数据集，需从物理机挂载，该模型不支持910A系列产品。
@@ -80,7 +80,7 @@
 4. 执行`source test_model.sh distributed`。
 5. 检查执行日志，日志位于/home/hwtest/distributed/train_auto.log，日志如下表示正常的进行训练。
 ![img.png](image/gpt3.png)
-
+6. 确保所有数据集和文件的属主为HwHiAiUser。
 ## 有效算力验收
 
 accept镜像作为有效算力验收时使用的镜像，支持resnet50和bert-large模型。
@@ -102,3 +102,4 @@ accept镜像作为有效算力验收时使用的镜像，支持resnet50和bert-l
 ```
 4. 执行`source test_model.sh ais-flops`。
 5. 检查执行日志，resnet50日志位于/root/ais_log/resnet_log，bert-large日志位于/root/ais_log/bert_log。
+6. 确保所有数据集和文件的属主为HwHiAiUser。
