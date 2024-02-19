@@ -15,7 +15,7 @@ if [ $cmd_ret -eq 0 ]; then
     echo "image exist"
   else
     echo "import accept image"
-    docker import accept.tar accept:6.0.RC1-ubuntu18.04
+    docker import accept.tar ascendhub.huawei.com/public-ascendhub/accept:6.0.RC1-ubuntu18.04
   fi
   docker stop $(docker ps -aq)
   ps -ef |grep -i python |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
@@ -36,7 +36,7 @@ if [ $cmd_ret -eq 0 ]; then
   -v /usr/local/sbin/npu-smi:/usr/local/sbin/npu-smi \
   -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
   -v /usr/local/Ascend/add-ons/:/usr/local/Ascend/add-ons \
-  -v /home/hwtest:/home/hwtest accept:6.0.RC1-ubuntu18.04 /bin/bash \
+  -v /home/hwtest:/home/hwtest ascendhub.huawei.com/public-ascendhub/accept:6.0.RC1-ubuntu18.04 /bin/bash \
   -c "bash /home/hwtest/hccl/hccl_test.sh; while true; do sleep 10; done"
 else
   #  docker命令不存在，当前在容器内
@@ -46,7 +46,7 @@ else
   export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
   export PATH=/usr/local/python3.7.5/bin:$PATH
   export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
-  IP=$(head -n 1 "hostfile")
+  IP=$(grep -v "^#" /home/hwtest/config/hostfile | grep -v "^$" | head -n 1 | awk -F ":" '{print $1}')
   if [[ "${IP}" == "$(hostname -I | awk '{print $1}')" ]]; then
       echo "当前是执行机，执行hccl_run.sh"
       chmod +x hccl_run.sh

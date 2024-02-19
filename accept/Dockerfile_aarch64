@@ -116,7 +116,7 @@ RUN apt-get update && \
 # gpt3模型数据
 RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     umask 0022 && \
-    cp /tmp/Megatron-LM/ /home/HwHiAiUser/distributed/Megatron-LM && \
+    cp -r /tmp/Megatron-LM/ /home/HwHiAiUser/distributed/Megatron-LM && \
     chown -R HwHiAiUser:HwHiAiUser /home/HwHiAiUser/distributed/Megatron-LM && \
     cd /home/HwHiAiUser/distributed/Megatron-LM/megatron_npu && \
     pip3 install -e . && \

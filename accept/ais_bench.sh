@@ -6,7 +6,6 @@ PRETRAIN_MODEL_PATH=/home/models/ms_bert_large.ckpt
 TYPE=bert-large
 
 arch=$(uname -m)
-version="6.0.RC1"
 # 检查type的值
 if [ "$TYPE" != "resnet50" ] && [ "$TYPE" != "bert-large" ]; then
     echo "错误：无效的type值。类型应为resnet50或bert-large。"
@@ -22,12 +21,12 @@ if [ $cmd_ret -eq 0 ]; then
     echo "the docker is not running, restart docker"
     systemctl restart docker
   fi
-  images_stat=`echo $docker_stat |grep "accept" |grep "$version-ubuntu18.04"`
+  images_stat=`echo $docker_stat |grep "accept" |grep "6.0.RC1-ubuntu18.04"`
   if [ "$images_stat" ]; then
     echo "image exist"
   else
     echo "import accept image"
-    docker import accept.tar accept:$version-ubuntu18.04
+    docker import accept.tar ascendhub.huawei.com/public-ascendhub/accept:6.0.RC1-ubuntu18.04
   fi
   docker stop $(docker ps -aq)
   ps -ef |grep -i python |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
@@ -58,8 +57,10 @@ if [ $cmd_ret -eq 0 ]; then
   -v /usr/local/sbin/npu-smi:/usr/local/sbin/npu-smi \
   -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
   -v /usr/local/Ascend/add-ons/:/usr/local/Ascend/add-ons \
-  -v /root/ais_log/bert_log:${ais_bert_log_dir} -v /root/ais_log/resnet_log:${ais_resnet_log_dir} \
-  accept:$version-ubuntu18.04 /bin/bash \
+  -v /home/hwtest:/home/hwtest \
+  -v /root/ais_log/bert_log:${ais_bert_log_dir} \
+  -v /root/ais_log/resnet_log:${ais_resnet_log_dir} \
+  ascendhub.huawei.com/public-ascendhub/accept:6.0.RC1-ubuntu18.04 /bin/bash \
   -c "bash /home/hwtest/ais/ais_bench.sh; while true; do sleep 10; done"
 else
   #  docker命令不存在，当前在容器内

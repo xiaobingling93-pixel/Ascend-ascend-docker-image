@@ -8,4 +8,4 @@ net_name=$(ip addr | grep -B 2 `hostname -I | awk '{print $1}'` | tail -n 1 | aw
 export HCCL_SOCKET_IFNAME=$net_name
 
 echo ---------------all_gather_test---------------
-mpirun -f hostfile -n $device_size all_gather_test -b 1G -e 1G -f 2 -d fp32 -p $npu_per_sever -c 0
+mpirun -f hostfile -n $device_size all_gather_test -b 1G -e 1G -f 2 -d fp32 -p $npu_per_sever

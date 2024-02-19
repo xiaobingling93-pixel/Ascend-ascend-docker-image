@@ -1,16 +1,16 @@
 #!/bin/bash
 source env_npu.sh
 
-GPUS_PER_NODE=$(find /dev -name 'davinci[0-9]*' | wc -l)
+NPU_PER_NODE=$(find /dev -name 'davinci[0-9]*' | wc -l)
 MASTER_ADDR=$(grep "master"  node_rank | awk '{print $1}')
 MASTER_PORT=60077
 LOCAL_ADDR=$(hostname -I | awk '{print $1}')
-NNODES=$(grep -v '^$' node_rank | wc -l)
+NNODES=$(grep -v '^$' node_rank | grep -v "^#"| wc -l)
 NODE_RANK=$(grep "$LOCAL_ADDR" node_rank | awk '{print $2}')
-WORLD_SIZE=$(($GPUS_PER_NODE*$NNODES))
+WORLD_SIZE=$(($NPU_PER_NODE*$NNODES))
 DATA_PATH=../output/my-t5_text_sentence
 CHECKPOINT_PATH=./checkpoint_dist
-DISTRIBUTED_ARGS="--nproc_per_node $GPUS_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
+DISTRIBUTED_ARGS="--nproc_per_node $NPU_PER_NODE --nnodes $NNODES --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT"
 
 # 参数校验，data_path为必传参数，其他参数的增删由模型自身决定；此处新增参数需在上面有定义并赋值
 pre_tockens=-1
@@ -41,12 +41,12 @@ fi
 
 python3 -m torch.distributed.launch $DISTRIBUTED_ARGS \
        ../../pretrain_gpt.py \
-       --num-layers 64 \
+       --num-layers 16 \
        --hidden-size 5120 \
        --num-attention-heads 40 \
        --micro-batch-size 2 \
        --global-batch-size 8 \
-       --seq-length 8192 \
+       --seq-length 1024 \
        --max-position-embeddings 8192 \
        --train-iters 500000 \
        --lr-decay-iters 320000 \
