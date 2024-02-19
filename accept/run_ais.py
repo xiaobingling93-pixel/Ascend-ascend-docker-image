@@ -24,6 +24,10 @@ class BenchMark:
         self.rank_table_file = f"{self.root_dir}/hccl.json"
 
     def _modify_config_file(self):
+
+        npu_number = len(glob.glob("/dev/davinci[0-9]*"))
+        if npu_number == 0:
+            raise FileNotFoundError("davinci device is not exists")
         config_file_path = f"{self.code_dir}/code/config/config.sh"
         with open(config_file_path, "r+", encoding="utf-8") as f:
             content = f.readlines()
@@ -36,6 +40,10 @@ class BenchMark:
                     content[i] = f"export PRETRAIN_MODEL_PATH={self.pre_model_path}\n"
                 if "RANK_TABLE_FILE" in v:
                     content[i] = f"export RANK_TABLE_FILE={self.rank_table_file}\n"
+                if "RANK_SIZE" in v:
+                    content[i] = f"export RANK_SIZE={npu_number}"
+                if "DEVICE_NUM" in v:
+                    content[i] = f"export DEVICE_NUM={npu_number}"
             f.seek(0)
             f.truncate()
             f.writelines(content)
