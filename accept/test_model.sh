@@ -19,8 +19,11 @@ if [[ "$param" == "all" || "$param" == "hccl-test" || "$param" == "ais-flops" ||
     # 如果没有参数或者参数为all，则依次执行所有脚本
     if [[ "$param" == "all" ]]; then
         bash "$hccl_dir/hccl_test.sh" &
+        wait $!
         bash "$flops_dir/flops_test.sh" &
+        wait $!
         bash "$ais_dir/ais_bench.sh" &
+        wait $!
         bash "$distributed_dir/sever_train.sh" &
     # 如果参数为hccl-test，则执行hccl_test.sh脚本
     elif [[ "$param" == "hccl-test" ]]; then
