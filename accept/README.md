@@ -1,6 +1,7 @@
 # accept介绍
 
 镜像基于ubuntu18.04基础镜像构建，包含训练、集合通信测试、物理算力测试和有效算力验收功能。镜像中包含MindSpore框架、pytorch1.11.0、python3.7.5、toolkit和toolbox软件包，并且内置了用于集群训练的GPT3模型和用于有效算力验收的resnet50、bert-large模型。
+test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、ais-flops、distributed，all会将所有测试项依次执行，需要准备好所有必要的先置条件；其他参数分别对应hccl集群通信验证、物理机算力测试、有效算力验收、集群训练。
 
 ## hccl-test集合通信
 

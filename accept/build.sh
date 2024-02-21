@@ -35,6 +35,21 @@ if [ $have_elastic == 0 ]; then
     echo "please put mindx_elastic wheel package here"
     exit 1
 fi
+have_torch=$(find . |grep "torch-1.11.0"|grep $arch|wc -l)
+if [ $have_torch == 0 ]; then
+    echo "please put torch wheel package here"
+    exit 1
+fi
+have_torch_npu=$(find . |grep "torch_npu"|grep $arch|wc -l)
+if [ $have_torch_npu == 0 ]; then
+    echo "please put torch_npu wheel package here"
+    exit 1
+fi
+have_apex=$(find . |grep "apex"|grep $arch|wc -l)
+if [ $apex == 0 ]; then
+    echo "please put apex wheel package here"
+    exit 1
+fi
 have_toolbox=$(find . |grep toolbox|grep $arch|wc -l)
 if [ $have_toolbox == 0 ]; then
     echo "please put toolbox package here"
