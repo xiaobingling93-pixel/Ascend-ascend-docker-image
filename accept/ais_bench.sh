@@ -21,21 +21,21 @@ if [ $cmd_ret -eq 0 ]; then
     echo "the docker is not running, restart docker"
     systemctl restart docker
   fi
-  images_stat=`echo $docker_stat |grep "accept" |grep "6.0.RC1-ubuntu18.04"`
+  images_stat=`echo $docker_stat |grep "acceptance" |grep "24.0.RC1-ubuntu18.04"`
   if [ "$images_stat" ]; then
     echo "image exist"
   else
-    echo "import accept image"
-    docker import accept.tar ascendhub.huawei.com/public-ascendhub/accept:6.0.RC1-ubuntu18.04
+    echo "import acceptance image"
+    docker import acceptance.tar ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04
   fi
   docker stop $(docker ps -aq)
   ps -ef |grep -i python |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
   ps -ef |grep -i all_reduce_test |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
   ps -ef |grep -i ascend-dmi |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
-  container_stat=`docker ps -af name=accept | grep accept`
+  container_stat=`docker ps -af name=acceptance | grep acceptance`
   if [ "$container_stat" ]; then
     echo "container exist"
-    docker rm accept
+    docker rm acceptance
   fi
   get_davincis=$(find /dev -name 'davinci[0-9]*')
   npu_per_node=$(echo "$get_davincis" | wc -l)
@@ -51,7 +51,7 @@ if [ $cmd_ret -eq 0 ]; then
   fi
   mkdir -p ~/ais_log/resnet_log ~/ais_log/bert_log
   chown -R HwHiAiUser:HwHiAiUser ~/ais_log/resnet_log ~/ais_log/bert_log
-  docker run --rm -it --shm-size=16g --ipc=host --net=host --name=accept $mount_davincis $data_path \
+  docker run --rm -it --shm-size=16g --ipc=host --net=host --name=acceptance $mount_davincis $data_path \
   -v /etc/ascend_install.info:/etc/ascend_install.info \
   -v /etc/hccn.conf:/etc/hccn.conf \
   -v /usr/local/sbin/npu-smi:/usr/local/sbin/npu-smi \
@@ -60,7 +60,7 @@ if [ $cmd_ret -eq 0 ]; then
   -v /home/hwtest:/home/hwtest \
   -v /root/ais_log/bert_log:${ais_bert_log_dir} \
   -v /root/ais_log/resnet_log:${ais_resnet_log_dir} \
-  ascendhub.huawei.com/public-ascendhub/accept:6.0.RC1-ubuntu18.04 /bin/bash \
+  ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04 /bin/bash \
   -c "bash /home/hwtest/ais/ais_bench.sh; while true; do sleep 10; done"
 else
   #  docker命令不存在，当前在容器内

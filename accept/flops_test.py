@@ -38,6 +38,8 @@ def flops_test(args):
         flops_result = "can not test the device"
         flops_info["ops"] = flops_result
         return flops_result, flops_info
+
+    # 解析dmi的结果stdout，保存device_id和tflops_fp16
     parts = stdout.split("\n", 1)
     if "y" in parts[0]:
         stdout = parts[1]
@@ -97,7 +99,8 @@ def main():
             total_flops += float(flops_result)
         flops_info_dict[i] = flops_info
     flops_info_dict['total_flops'] = total_flops
-    print(flops_info_dict)
+    flops_info_json = json.dumps(flops_info_dict, indent=4, sort_keys=True)
+    print(flops_info_json)
 
 
 if __name__ == "__main__":

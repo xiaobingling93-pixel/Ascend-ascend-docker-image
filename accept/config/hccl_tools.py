@@ -38,37 +38,33 @@ def get_host_ip():
     return ip
 
 
-def main():
-    print("start", __file__)
-    device_num, visible_device, server_ip = 0, 0, ''
-    if len(sys.argv) == 3:
-        device_num, visible_device = sys.argv[1:]
-    if len(sys.argv) == 4:
-        device_num, visible_device, server_ip = sys.argv[1:]
+def check_digit(device_num, visible_device):
+    """
+    check param
+    :return:
+    """
+    if not str(device_num).isdigit() and not str(visible_device).isdigit():
+        return False
+    return True
 
-    # visible_devices
+
+def generate_hccl(device_num, visible_device, server_ip):
+    """
+    generate hccl.json file
+    :return:
+    """
+    server_id = server_ip if server_ip else get_host_ip()
+    if not server_id:
+        raise ValueError("get server ip failed, please input server ip!")
     visible_devices = list(map(str, range(int(visible_device))))
-    print('visible_devices:{}'.format(visible_devices))
-
-    # server_id
-    ip = get_host_ip()
-    if server_ip:
-        server_id = server_ip
-    elif ip:
-        server_id = ip
-    else:
-        raise ValueError("please input server ip!")
-    print('server_id:{}'.format(server_id))
-
-    # device_num
 
     device_num_list = list(range(int(device_num)))
-    print("device_num_list:", device_num_list)
 
-    assert len(visible_devices) >= len(device_num_list)
+    if len(visible_devices) < len(device_num_list):
+        raise ValueError("the number of available devices is less than the number of devices required ")
 
     # construct hccn_table
-    device_ips: Dict[Any, Any] = {}
+    device_ips: Dict[str, str] = {}
     try:
         for device_id in device_num_list:
             ret = os.popen("hccn_tool -i %d -ip -g" % device_id).readlines()
@@ -86,25 +82,16 @@ def main():
             print("Failed to read /etc/hccn.conf")
             raise SystemError("Failed to find information for hccl")
 
-    hccn_table = {'version': '1.0',
-                  'server_count': '1',
-                  'server_list': []}
+    hccn_table = {'version': '1.0', 'server_count': '1', 'server_list': []}
     device_list = []
     rank_id = 0
     for instance_id in device_num_list:
         device_id = visible_devices[instance_id]
-        device_ip = device_ips[device_id]
-        device = {'device_id': device_id,
-                  'device_ip': device_ip,
-                  'rank_id': str(rank_id)}
-        print('rank_id:{}, device_id:{}, device_ip:{}'.format(rank_id, device_id, device_ip))
+        device_ip = device_ips.get(device_id, "")
+        device = {'device_id': device_id, 'device_ip': device_ip, 'rank_id': str(rank_id)}
         rank_id += 1
         device_list.append(device)
-    hccn_table['server_list'].append({
-        'server_id': server_id,
-        'device': device_list,
-        'host_nic_ip': 'reserve'
-    })
+    hccn_table['server_list'].append({'server_id': server_id, 'device': device_list, 'host_nic_ip': 'reserve'})
     hccn_table['status'] = 'completed'
 
     # save hccn_table to file
@@ -114,6 +101,20 @@ def main():
         json.dump(hccn_table, table_fp, indent=4)
     sys.stdout.flush()
     print("Completed: hccl file was save in :", table_fn)
+
+
+def main():
+    print("start", __file__)
+    device_num, visible_device, server_ip = 0, 0, ''
+    if len(sys.argv) == 3:
+        device_num, visible_device = sys.argv[1:]
+    if len(sys.argv) == 4:
+        device_num, visible_device, server_ip = sys.argv[1:]
+
+    # visible_devices
+    if not check_digit(device_num, visible_device):
+        raise ValueError("input parameter  ddevice_num or visible_device number not is digit")
+    generate_hccl(device_num, visible_device, server_ip)
 
 
 if __name__ == "__main__":
