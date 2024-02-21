@@ -1,17 +1,25 @@
 # acceptance介绍
 
-镜像基于ubuntu18.04基础镜像构建，包含训练、集合通信测试、物理算力测试和有效算力验收功能。镜像中包含MindSpore框架、pytorch1.11.0、python3.7.5、toolkit和toolbox软件包，并且内置了用于集群训练的GPT3模型和用于有效算力验收的resnet50、bert-large模型。
+1. 镜像基于ubuntu18.04基础镜像构建，包含训练、集合通信测试、物理算力测试和有效算力验收功能。镜像中包含MindSpore框架、pytorch1.11.0、python3.7.5、toolkit和toolbox软件包，并且内置了用于集群训练的GPT3模型和用于有效算力验收的resnet50、bert-large模型。
 
-test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、ais-flops、distributed，all会将所有测试项依次执行，需要准备好所有必要的先置条件；其他参数分别对应hccl集群通信验证、物理机算力测试、有效算力验收、集群训练。
+2. test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、ais-flops、distributed，all会将所有测试项依次执行，需要准备好所有必要的先置条件；其他参数分别对应hccl集群通信验证、物理机算力测试、有效算力验收、集群训练。
 
-另外创建config目录，将node_rank、hostfile和hccl_tool.py放置该目录下：
+3. 另外创建config目录，将node_rank、hostfile和hccl_tool.py放置该目录下：
 ```
     mkdir -p /home/hwtest/config
     cp node_rank hostfile hccl_tool.py /home/hwtest/config
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/config
 ```
 
-为了成功验证，需要独占环境，脚本会杀掉其他执行中的进程，请用户自行处理。
+4. 为了成功验证，需要独占环境，脚本会杀掉其他执行中的进程，请用户注意并自行处理可能出现的问题。
+5. 建议用户[手动编译apex包](https://gitee.com/ascend/apex)替换镜像中的apex版本，不同架构对应的apex包不同。
+   编译好whl包后执行：
+
+   ```
+   pip3 install --upgrade apex-0.1_ascend-cp37-cp37m-linux_$(arch).whl
+   ```
+6. hccl_test.sh, flops_test.sh, ais_bench.sh和sever_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04，
+用户可根据实际情况进行修改。
 
 ## hccl-test集合通信
 
@@ -32,8 +40,8 @@ test_model.sh为入口脚本，可以接受参数all（无参数时，默认为a
 4. 修改hostfile文件，文件位于config目录下，配置格式”节点IP:每节点进程数“，该配置方式仅支持使用IPv4协议进行通信的场景，第一个节点IP为主节点。
 ```
     # 训练节点ip:每节点进程数
-    10.78.130.22：8
-    10.78.130.21：8
+    51.38.65.157：8
+    51.38.68.149：8
 ```
 5. 所有参与测试的集群节点准备hccl_test.sh测试脚本，可参考代码中hccl_test.sh进行修改。
 ```
