@@ -67,16 +67,21 @@ def generate_hccl(device_num, visible_device, server_ip):
     device_ips: Dict[str, str] = {}
     try:
         for device_id in device_num_list:
+            """
+                ipaddr:192.168.100.100
+                netmask:255.255.255.0
+            """
             ret = os.popen("hccn_tool -i %d -ip -g" % device_id).readlines()
-            device_ips[str(device_id)] = ret[0].split(":")[1].replace('\n', '')
-    except IndexError:
-        print("Failed to call hccn_tool, try to read /etc/hccn.conf instead")
+            if ret:
+                device_ips[str(device_id)] = ret[0].split(":")[-1].replace('\n', '')
+    except Exception as e:
+        print("Failed to call hccn_tool, try to read /etc/hccn.conf instead, error: {}".format(str(e)))
         try:
             with open('/etc/hccn.conf', 'r') as fin:
                 for hccn_item in fin.readlines():
-                    if hccn_item.strip().startswith('address_'):
+                    if hccn_item.strip().startswith('address_') and "=" in hccn_item:
                         device_id, device_ip = hccn_item.split('=')
-                        device_id = device_id.split('_')[1]
+                        device_id = device_id.split('_')[-1]
                         device_ips[device_id] = device_ip.strip()
         except OSError:
             print("Failed to read /etc/hccn.conf")
