@@ -1,5 +1,18 @@
 #!/bin/bash
 
+stop_and_remove_container() {
+    local container_name="$1"
+    local container_id=$(docker ps -aqf "name=$container_name")
+
+    if [ -n "$container_id" ]; then
+        docker stop "$container_id" > /dev/null 2>&1
+        docker rm "$container_id" > /dev/null 2>&1
+        echo "容器 $container_name 已停止并删除。"
+    else
+        echo "容器 $container_name 不存在。"
+    fi
+}
+
 # 定义脚本参数
 param=${1:-"all"}
 
@@ -25,7 +38,6 @@ if [[ "$param" == "all" || "$param" == "hccl-test" || "$param" == "ais-flops" ||
         bash "$ais_dir/ais_bench.sh" &
         wait $!
         bash "$distributed_dir/sever_train.sh" &
-        wait $!
     # 如果参数为hccl-test，则执行hccl_test.sh脚本
     elif [[ "$param" == "hccl-test" ]]; then
         bash "$hccl_dir/hccl_test.sh" &
@@ -42,13 +54,11 @@ if [[ "$param" == "all" || "$param" == "hccl-test" || "$param" == "ais-flops" ||
         echo "Invalid parameter."
         exit 1
     fi
-    docker stop acceptance
-    docker rm acceptance
+    # 等待所有脚本执行完成
+    wait
+    stop_and_remove_container "acceptance"
 else
     echo "Invalid parameter."
     exit 1
 
 fi
-
-# 等待所有脚本执行完成
-wait

@@ -42,6 +42,7 @@ else
   #  docker命令不存在，当前在容器内
   cd /home/HwHiAiUser/hccl
   cp /home/hwtest/config/hostfile ./
+  mkdir -p /run/sshd && /usr/sbin/sshd -p 33333
   source /usr/local/Ascend/ascend-toolkit/set_env.sh
   export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
   export PATH=/usr/local/python3.7.5/bin:$PATH

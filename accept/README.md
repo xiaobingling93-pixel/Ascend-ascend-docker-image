@@ -4,7 +4,7 @@
 
 2. test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、ais-flops、distributed，all会将所有测试项依次执行，需要准备好所有必要的先置条件；其他参数分别对应hccl集群通信验证、物理机算力测试、有效算力验收、集群训练。
 
-3. 另外创建config目录，将node_rank、hostfile和hccl_tool.py放置该目录下：
+3. 创建config目录，将node_rank、hostfile和hccl_tool.py放置该目录下：
 ```
     mkdir -p /home/hwtest/config
     cp node_rank hostfile hccl_tool.py /home/hwtest/config
@@ -53,6 +53,8 @@
 <div align=center>
 <img src="image/hccl_test_result.png">
 </div>
+
+8. 完成测试后请恢复~/.ssh/config参与集群测试的节点的ssh服务端口。
 
 ## 物理算力测试
 
