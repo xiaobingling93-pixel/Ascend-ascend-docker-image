@@ -38,7 +38,7 @@ if [ $cmd_ret -eq 0 ]; then
    -v /usr/local/Ascend/add-ons/:/usr/local/Ascend/add-ons \
    -v $train_data:/home/HwHiAiUser/distributed/Megatron-LM/megatron_npu/output \
    -v /home/hwtest:/home/hwtest ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04 /bin/bash \
-   -c "bash /home/hwtest/distributed/sever_train.sh; while true; do sleep 10; done"
+   -c "bash /home/hwtest/distributed/sever_train.sh"
 else
   #  docker命令不存在，当前在容器内
   cd /home/HwHiAiUser/distributed/Megatron-LM/megatron_npu/tests_gpt
@@ -53,5 +53,5 @@ else
   export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
   export PATH=/usr/local/python3.7.5/bin:$PATH
   export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
-  bash pretrain_gpt_distributed_bf16_test.sh --pre_tokensckens=2048 --next_tockens=0 --shape_order=SBH > /home/hwtest/distributed/train_auto.log 2>&1 &
+  bash pretrain_gpt_distributed_bf16_test.sh --pre_tokensckens=2048 --next_tockens=0 --shape_order=SBH > /home/hwtest/distributed/train_auto.log 2>&1
 fi

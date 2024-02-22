@@ -77,7 +77,7 @@ python3 -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --shape-order $shape_order \
        --sequence-parallel \
        --log-interval 1 \
-       --save-interval 500000 \
+       --save-interval 50000 \
        --eval-interval 1000 \
        --eval-iters 10 \
        --bf16

@@ -61,7 +61,7 @@ if [ $cmd_ret -eq 0 ]; then
   -v /root/ais_log/bert_log:${ais_bert_log_dir} \
   -v /root/ais_log/resnet_log:${ais_resnet_log_dir} \
   ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04 /bin/bash \
-  -c "bash /home/hwtest/ais/ais_bench.sh; while true; do sleep 10; done"
+  -c "bash /home/hwtest/ais/ais_bench.sh"
 else
   #  docker命令不存在，当前在容器内
   cd /home/HwHiAiUser/ais
@@ -73,5 +73,5 @@ else
   export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
   export PATH=/usr/local/python3.7.5/bin:$PATH
   export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
-  python3 run_ais.py  $parameter  > /home/hwtest/ais/ais_bench.log 2>&1 &
+  python3 run_ais.py  $parameter  > /home/hwtest/ais/ais_bench.log 2>&1
 fi

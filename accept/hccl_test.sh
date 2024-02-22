@@ -30,14 +30,14 @@ if [ $cmd_ret -eq 0 ]; then
   get_davincis=$(find /dev -name 'davinci[0-9]*')
   mount_davincis="--device=/dev/davinci_manager --device=/dev/devmm_svm --device=/dev/hisi_hdc"
   for i in $get_davincis;do mount_davincis="$mount_davincis --device=$i";done
-  docker run --rm -it --ipc=host --net=host --user=root --name=acceptance -p 33333:33333 $mount_davincis \
+  docker run --rm --ipc=host --net=host --user=root --name=acceptance -p 33333:33333 $mount_davincis \
   -v /var/log/npu:/usr/slog \
   -v /root/.ssh:/root/.ssh \
   -v /usr/local/sbin/npu-smi:/usr/local/sbin/npu-smi \
   -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
   -v /usr/local/Ascend/add-ons/:/usr/local/Ascend/add-ons \
   -v /home/hwtest:/home/hwtest ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04 /bin/bash \
-  -c "bash /home/hwtest/hccl/hccl_test.sh; while true; do sleep 10; done"
+  -c "bash /home/hwtest/hccl/hccl_test.sh"
 else
   #  docker命令不存在，当前在容器内
   cd /home/HwHiAiUser/hccl
@@ -49,11 +49,12 @@ else
   export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
   IP=$(grep -v "^#" /home/hwtest/config/hostfile | grep -v "^$" | head -n 1 | awk -F ":" '{print $1}')
   if [[ "${IP}" == "$(hostname -I | awk '{print $1}')" ]]; then
+      sleep 20
       awk 'NF && $0 !~ /^#/' hostfile | while IFS=":" read -r ip_address pid_num rest_of_line; do
           ssh-keyscan -p 33333 -t rsa $ip_address >> /root/.ssh/known_hosts
       done
       chmod +x hccl_run.sh
-      ./hccl_run.sh > /home/hwtest/hccl/hccl_test.log 2>&1 &
+      ./hccl_run.sh > /home/hwtest/hccl/hccl_test.log 2>&1
   else
       echo "当前不是执行机，等待执行机执行完成后所有服务器退出容器"
   fi

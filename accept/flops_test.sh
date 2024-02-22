@@ -34,7 +34,7 @@ if [ $cmd_ret -eq 0 ]; then
   -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
   -v /usr/local/Ascend/add-ons/:/usr/local/Ascend/add-ons \
   -v /home/hwtest:/home/hwtest \
-  ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04 /bin/bash -c "bash /home/hwtest/flops/flops_test.sh; while true; do sleep 10; done"
+  ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04 /bin/bash -c "bash /home/hwtest/flops/flops_test.sh"
 else
   #  docker命令不存在，当前在容器内
   cd /home/HwHiAiUser/flops
@@ -42,5 +42,5 @@ else
   export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
   export PATH=/usr/local/python3.7.5/bin:$PATH
   export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
-  python3 flops_test.py > /home/hwtest/flops/flops_test.log 2>&1 &
+  python3 flops_test.py > /home/hwtest/flops/flops_test.log 2>&1
 fi

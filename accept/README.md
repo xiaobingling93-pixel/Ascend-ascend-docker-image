@@ -48,7 +48,7 @@
     mkdir -p /home/hwtest/hccl
     cp hccl_test.sh /home/hwtest/hccl
 ```
-6. 执行`source test_model.sh hccl-test`。
+6. 执行`source test_model.sh hccl-test &`。
 7. 检查执行日志，日志位于/home/hwtest/hccl/hccl_test.log，结果如下，表示测试成功：
 <div align=center>
 <img src="image/hccl_test_result.png">
@@ -64,7 +64,7 @@
     cp flops_test.sh /home/hwtest/flops
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/flops
 ```
-2. 执行`source test_model.sh flops-test`。
+2. 执行`source test_model.sh flops-test &`。
 3. 检查执行日志，日志位于/home/hwtest/flops/flops_test.log。
 4. 确保所有数据集和文件的属主为HwHiAiUser。
 ## 集群训练
@@ -100,7 +100,7 @@
     cp sever_train.sh pretrain_gpt_distributed_bf16_test.sh /home/hwtest/distributed
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/distributed
 ```
-4. 执行`source test_model.sh distributed`。
+4. 执行`source test_model.sh distributed &`。
 5. 检查执行日志，日志位于/home/hwtest/distributed/train_auto.log，日志如下表示正常的进行训练。
 ![img.png](image/gpt3.png)
 6. 确保所有数据集和文件的属主为HwHiAiUser。
@@ -124,6 +124,6 @@ acceptance镜像作为有效算力验收时使用的镜像，支持resnet50和be
     cp ais_bench.sh /home/hwtest/ais
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/ais
 ```
-4. 执行`source test_model.sh ais-flops`。
+4. 执行`source test_model.sh ais-flops &`。
 5. 检查执行日志，resnet50日志位于/root/ais_log/resnet_log，bert-large日志位于/root/ais_log/bert_log。
 6. 确保所有数据集和文件的属主为HwHiAiUser。
