@@ -99,7 +99,7 @@ def main():
             total_flops += float(flops_result)
         flops_info_dict[i] = flops_info
     flops_info_dict['total_flops'] = total_flops
-    flops_info_json = json.dumps(flops_info_dict, indent=4, sort_keys=True)
+    flops_info_json = json.dumps(flops_info_dict, indent=4)
     print(flops_info_json)
 
 

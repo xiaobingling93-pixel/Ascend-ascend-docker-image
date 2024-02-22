@@ -49,13 +49,13 @@ else
   export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
   IP=$(grep -v "^#" /home/hwtest/config/hostfile | grep -v "^$" | head -n 1 | awk -F ":" '{print $1}')
   if [[ "${IP}" == "$(hostname -I | awk '{print $1}')" ]]; then
-      sleep 20
+      sleep 10
       awk 'NF && $0 !~ /^#/' hostfile | while IFS=":" read -r ip_address pid_num rest_of_line; do
           ssh-keyscan -p 33333 -t rsa $ip_address >> /root/.ssh/known_hosts
       done
       chmod +x hccl_run.sh
       ./hccl_run.sh > /home/hwtest/hccl/hccl_test.log 2>&1
   else
-      echo "当前不是执行机，等待执行机执行完成后所有服务器退出容器"
+      sleep 30
   fi
 fi

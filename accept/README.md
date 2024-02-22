@@ -1,18 +1,15 @@
 # acceptance介绍
 
 1. 镜像基于ubuntu18.04基础镜像构建，包含训练、集合通信测试、物理算力测试和有效算力验收功能。镜像中包含MindSpore框架、pytorch1.11.0、python3.7.5、toolkit和toolbox软件包，并且内置了用于集群训练的GPT3模型和用于有效算力验收的resnet50、bert-large模型。
-
-2. test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、ais-flops、distributed，all会将所有测试项依次执行，需要准备好所有必要的先置条件；其他参数分别对应hccl集群通信验证、物理机算力测试、有效算力验收、集群训练。
-
-3. 创建config目录，将node_rank、hostfile和hccl_tool.py放置该目录下：
+2. 创建config目录，将node_rank、hostfile和hccl_tool.py放置该目录下：
 ```
     mkdir -p /home/hwtest/config
     cp node_rank hostfile hccl_tool.py /home/hwtest/config
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/config
 ```
 
-4. 为了成功验证，需要独占环境，脚本会杀掉其他执行中的进程，请用户注意并自行处理可能出现的问题。
-5. 建议用户[手动编译apex包](https://gitee.com/ascend/apex)替换镜像中的apex版本，不同架构对应的apex包不同。
+3. 为了成功验证，需要独占环境，脚本会杀掉其他执行中的进程，请用户注意并自行处理可能出现的问题。
+4. 建议用户[手动编译apex包](https://gitee.com/ascend/apex)替换镜像中的apex版本，不同架构对应的apex包不同。
    编译好whl包后执行：
 
    ```
@@ -20,6 +17,12 @@
    ```
 6. hccl_test.sh, flops_test.sh, ais_bench.sh和sever_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04，
 用户可根据实际情况进行修改。
+7. test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、distributed、ais-flops，all会将所有测试项依次执行，需要准备好所有必要的先置条件（参考后续单项测试功能介绍）；其他参数分别对应hccl集群通信验证、物理机算力测试、集群训练、有效算力验收。
+```
+   source test_model.sh &
+   或者
+   source test_model.sh all & 
+```
 
 ## hccl-test集合通信
 
@@ -48,7 +51,7 @@
     mkdir -p /home/hwtest/hccl
     cp hccl_test.sh /home/hwtest/hccl
 ```
-6. 执行`source test_model.sh hccl-test &`。
+6. 执行`source test_model.sh hccl-test`。
 7. 检查执行日志，日志位于/home/hwtest/hccl/hccl_test.log，结果如下，表示测试成功：
 <div align=center>
 <img src="image/hccl_test_result.png">
@@ -64,7 +67,7 @@
     cp flops_test.sh /home/hwtest/flops
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/flops
 ```
-2. 执行`source test_model.sh flops-test &`。
+2. 执行`source test_model.sh flops-test`。
 3. 检查执行日志，日志位于/home/hwtest/flops/flops_test.log。
 4. 确保所有数据集和文件的属主为HwHiAiUser。
 ## 集群训练
@@ -100,7 +103,7 @@
     cp sever_train.sh pretrain_gpt_distributed_bf16_test.sh /home/hwtest/distributed
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/distributed
 ```
-4. 执行`source test_model.sh distributed &`。
+4. 执行`source test_model.sh distributed`。
 5. 检查执行日志，日志位于/home/hwtest/distributed/train_auto.log，日志如下表示正常的进行训练。
 ![img.png](image/gpt3.png)
 6. 确保所有数据集和文件的属主为HwHiAiUser。
@@ -124,6 +127,6 @@ acceptance镜像作为有效算力验收时使用的镜像，支持resnet50和be
     cp ais_bench.sh /home/hwtest/ais
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/ais
 ```
-4. 执行`source test_model.sh ais-flops &`。
+4. 执行`source test_model.sh ais-flops`。
 5. 检查执行日志，resnet50日志位于/root/ais_log/resnet_log，bert-large日志位于/root/ais_log/bert_log。
 6. 确保所有数据集和文件的属主为HwHiAiUser。
