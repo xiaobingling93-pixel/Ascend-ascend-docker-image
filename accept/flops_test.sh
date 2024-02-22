@@ -10,7 +10,7 @@ if [ $cmd_ret -eq 0 ]; then
     echo "the docker is not running, restart docker"
     systemctl restart docker
   fi
-  images_stat=`echo $docker_stat |ascendhub.huawei.com/public-ascendhub/acceptance |grep "24.0.RC1-ubuntu18.04"`
+  images_stat=`echo $docker_stat |grep "ascendhub.huawei.com/public-ascendhub/acceptance" |grep "24.0.RC1-ubuntu18.04"`
   if [ "$images_stat" ]; then
     echo "image exist"
   else
