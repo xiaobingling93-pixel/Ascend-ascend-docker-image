@@ -37,6 +37,7 @@ if [[ "$param" == "all" || "$param" == "hccl-test" || "$param" == "ais-flops" ||
         wait $!
         bash "$ais_dir/ais_bench.sh" &
         wait $!
+        rm -f /root/.ssh/config
         bash "$distributed_dir/sever_train.sh" &
     # 如果参数为hccl-test，则执行hccl_test.sh脚本
     elif [[ "$param" == "hccl-test" ]]; then
@@ -49,6 +50,7 @@ if [[ "$param" == "all" || "$param" == "hccl-test" || "$param" == "ais-flops" ||
         bash "$flops_dir/flops_test.sh" &
     # 如果参数为distributed，则执行sever_train.sh脚本
     elif [[ "$param" == "distributed" ]]; then
+        rm -f /root/.ssh/config
         bash "$distributed_dir/sever_train.sh" &
     else
         echo "Invalid parameter."
