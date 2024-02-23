@@ -11,33 +11,33 @@ if [ $cmd_ret -eq 0 ]; then
     echo "the docker is not running, restart docker"
     systemctl restart docker
   fi
-  images_stat=`echo $docker_stat |grep "ascendhub.huawei.com/public-ascendhub/acceptance" |grep "24.0.RC1-ubuntu18.04"`
+  images_stat=`echo $docker_stat |grep "ascendhub.huawei.com/public-ascendhub/testcases" |grep "24.0.RC1-ubuntu18.04"`
   if [ "$images_stat" ]; then
     echo "image exist"
   else
-    echo "import acceptance image"
-    docker import acceptance.tar ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04
+    echo "import testcases image"
+    docker import testcases.tar ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu18.04
   fi
   docker stop $(docker ps -aq)
   ps -ef |grep -i python |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
   ps -ef |grep -i all_reduce_test |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
   ps -ef |grep -i ascend-dmi |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
-  container_stat=`docker ps -af name=acceptance | grep acceptance`
+  container_stat=`docker ps -af name=testcases | grep testcases`
   if [ "$container_stat" ]; then
     echo "container exist"
-    docker rm acceptance
+    docker rm testcases
   fi
   get_davincis=$(find /dev -name 'davinci[0-9]*')
   mount_davincis="--device=/dev/davinci_manager --device=/dev/devmm_svm --device=/dev/hisi_hdc"
   for i in $get_davincis;do mount_davincis="$mount_davincis --device=$i";done
-  docker run --rm -it --shm-size=16g --ipc=host --net=host --name=acceptance $mount_davincis \
+  docker run --rm -it --shm-size=16g --ipc=host --net=host --name=testcases $mount_davincis \
    -v /etc/ascend_install.info:/etc/ascend_install.info \
    -v /etc/hccn.conf:/etc/hccn.conf \
    -v /usr/local/sbin/npu-smi:/usr/local/sbin/npu-smi \
    -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
    -v /usr/local/Ascend/add-ons/:/usr/local/Ascend/add-ons \
    -v $train_data:/home/HwHiAiUser/distributed/Megatron-LM/megatron_npu/output \
-   -v /home/hwtest:/home/hwtest ascendhub.huawei.com/public-ascendhub/acceptance:24.0.RC1-ubuntu18.04 /bin/bash \
+   -v /home/hwtest:/home/hwtest ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu18.04 /bin/bash \
    -c "bash /home/hwtest/distributed/sever_train.sh"
 else
   #  docker命令不存在，当前在容器内

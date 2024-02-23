@@ -22,7 +22,7 @@ if [ -d Megatron-LM ]; then
     rm -rf Megatron-LM
 fi
 
-cp -r /usr1/package930/acceptance-data-model/Megatron-LM .
+cp -r /usr1/package930/testcases-data-model/Megatron-LM .
 
 #检查依赖包
 have_mindspore=$(find . |grep "mindspore"|grep $arch|wc -l)
@@ -58,7 +58,7 @@ fi
 
 echo "start build"
 if [ $arch == "x86_64" ];then
-    DOCKER_BUILDKIT=1  docker build . -t acceptance:ubuntu18.04-x64
+    DOCKER_BUILDKIT=1  docker build . -t testcases:ubuntu18.04-x64
 else
-    DOCKER_BUILDKIT=1  docker build . -f Dockerfile_aarch64 -t acceptance:ubuntu18.04-arm64
+    DOCKER_BUILDKIT=1  docker build . -f Dockerfile_aarch64 -t testcases:ubuntu18.04-arm64
 fi
