@@ -15,7 +15,7 @@
    ```
    pip3 install --upgrade apex-0.1_ascend-cp37-cp37m-linux_$(arch).whl
    ```
-6. hccl_test.sh, flops_test.sh, ais_bench.sh和sever_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu18.04，
+6. hccl_test.sh, flops_test.sh, ais_bench.sh和sever_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04，
 用户可根据实际情况进行修改。
 7. test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、distributed、ais-flops，all会将所有测试项依次执行，需要准备好所有必要的先置条件（参考后续单项测试功能介绍）；其他参数分别对应hccl集群通信验证、物理机算力测试、集群训练、有效算力验收。
 ```
@@ -24,11 +24,11 @@
    source test_model.sh all & 
 ```
 8. 镜像支持Atlas 900 A2 PoD，Atlas 800T A2和Atlas 200T A2 Box16形态产品。
-9. 镜像内软件版本
+9. 镜像内软件版本，配套23.0.0的驱动固件。
 
-| 镜像版本     | CANN版本 | 框架版本                          | toolbox版本 | 变更项 |
-|----------|--------|-------------------------------|-----------|-----|
-| 24.0.RC1 | 7.0.0  | MindSpore 2.2.10,Torch 1.11.0 | 5.0.0     |     |
+| 镜像版本   | CANN版本 | 框架版本                          | toolbox版本 | 变更项 |
+|--------|--------|-------------------------------|-----------|-----|
+| 23.0.0 | 7.0.0  | MindSpore 2.2.10,Torch 1.11.0 | 5.0.0     |     |
 
 ## hccl-test集合通信
 
@@ -80,7 +80,7 @@
 
 集群训练支持gpt3模型，数据集为enwiki数据集，需从物理机挂载，该模型不支持910A系列产品。
 
-1. 默认镜像：`ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu18.04`，可修改image字段来修改使用的镜像。
+1. 默认镜像：`ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04`，可修改image字段来修改使用的镜像。
 2. 准备node_rank文件，第一行节点为master节点，格式如下：
 ```
   172.19.20.26 0 master
