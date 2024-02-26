@@ -68,6 +68,7 @@ spec:
           else
             sleep 10;
             export HCCL_SOCKET_IFNAME='enp198s0f0';
+            awk 'NF && $0 !~ /^#/' hostfile | while IFS=':' read -r ip_address pid_num rest_of_line;do ssh-keyscan -p 33333 -t rsa $ip_address >> /root/.ssh/known_hosts 2>/dev/null;done;
             echo start all_gather_test;mpirun -f hostfile -n 16  all_gather_test -b 8k -e 64M -f 2 -d fp32 -p 8;
             echo start all_reduce_test;mpirun -f hostfile -n 16  all_reduce_test -b 8k -e 64M -f 2 -d fp32 -o sum -p 8;
             echo start alltoallv_test;mpirun -f hostfile -n 16  alltoallv_test -b 8k -e 64M -f 2 -d fp32  -p 8 ;
