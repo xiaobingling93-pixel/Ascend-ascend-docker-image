@@ -11,12 +11,12 @@ if [ $cmd_ret -eq 0 ]; then
     echo "the docker is not running, restart docker"
     systemctl restart docker
   fi
-  images_stat=`echo $docker_stat |grep "ascendhub.huawei.com/public-ascendhub/testcases" |grep "24.0.RC1-ubuntu18.04"`
+  images_stat=`echo $docker_stat |grep "ascendhub.huawei.com/public-ascendhub/testcases" |grep "23.0.0-ubuntu18.04"`
   if [ "$images_stat" ]; then
     echo "image exist"
   else
     echo "import testcases image"
-    docker import testcases.tar ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu18.04
+    docker import testcases.tar ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04
   fi
   docker stop $(docker ps -aq)
   ps -ef |grep -i python |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
@@ -37,7 +37,7 @@ if [ $cmd_ret -eq 0 ]; then
    -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
    -v /usr/local/Ascend/add-ons/:/usr/local/Ascend/add-ons \
    -v $train_data:/home/HwHiAiUser/distributed/Megatron-LM/megatron_npu/output \
-   -v /home/hwtest:/home/hwtest ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu18.04 /bin/bash \
+   -v /home/hwtest:/home/hwtest ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04 /bin/bash \
    -c "bash /home/hwtest/distributed/sever_train.sh"
 else
   #  docker命令不存在，当前在容器内
