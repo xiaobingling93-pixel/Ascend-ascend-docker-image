@@ -51,7 +51,7 @@ else
   if [[ "${IP}" == "$(hostname -I | awk '{print $1}')" ]]; then
       sleep 10
       awk 'NF && $0 !~ /^#/' hostfile | while IFS=":" read -r ip_address pid_num rest_of_line; do
-          ssh-keyscan -p 33333 -t rsa $ip_address >> /root/.ssh/known_hosts >/dev/null 2>&1
+          ssh-keyscan -p 33333 -t rsa $ip_address >> /root/.ssh/known_hosts 2>/dev/null
       done
       chmod +x hccl_run.sh
       ./hccl_run.sh > /home/hwtest/hccl/hccl_test.log 2>&1
