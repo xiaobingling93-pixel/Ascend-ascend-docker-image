@@ -9,22 +9,17 @@
 ```
 
 3. 为了成功验证，需要独占环境，脚本会杀掉其他执行中的进程，请用户注意并自行处理可能出现的问题。
-4. 建议用户[手动编译apex包](https://gitee.com/ascend/apex)替换镜像中的apex版本，不同架构对应的apex包不同。
-   编译好whl包后执行：
 
-   ```
-   pip3 install --upgrade apex-0.1_ascend-cp37-cp37m-linux_$(arch).whl
-   ```
-6. hccl_test.sh, flops_test.sh, ais_bench.sh和sever_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04，
+4. hccl_test.sh, flops_test.sh, ais_bench.sh和sever_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04，
 用户可根据实际情况进行修改。
-7. test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、distributed、ais-flops，all会将所有测试项依次执行，需要准备好所有必要的先置条件（参考后续单项测试功能介绍）；其他参数分别对应hccl集群通信验证、物理机算力测试、集群训练、有效算力验收。
+5. test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、distributed、ais-flops，all会将所有测试项依次执行，需要准备好所有必要的先置条件（参考后续单项测试功能介绍）；其他参数分别对应hccl集群通信验证、物理机算力测试、集群训练、有效算力验收。
 ```
    source test_model.sh &
    或者
    source test_model.sh all & 
 ```
-8. 镜像支持Atlas 900 A2 PoD，Atlas 800T A2和Atlas 200T A2 Box16形态产品。
-9. 镜像内软件版本，配套23.0.0的驱动固件。
+6. 镜像支持Atlas 900 A2 PoD，Atlas 800T A2和Atlas 200T A2 Box16形态产品。
+7. 镜像内软件版本，配套23.0.0的驱动固件。
 
 | 镜像版本   | CANN版本 | 框架版本                          | toolbox版本 | 变更项 |
 |--------|--------|-------------------------------|-----------|-----|
