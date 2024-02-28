@@ -38,7 +38,7 @@ if [ $cmd_ret -eq 0 ]; then
    -v /usr/local/Ascend/add-ons/:/usr/local/Ascend/add-ons \
    -v $train_data:/home/HwHiAiUser/distributed/Megatron-LM/megatron_npu/output \
    -v /home/hwtest:/home/hwtest ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04 /bin/bash \
-   -c "bash /home/hwtest/distributed/sever_train.sh"
+   -c "bash /home/hwtest/distributed/server_train.sh"
 else
   #  docker命令不存在，当前在容器内
   cd /home/HwHiAiUser/distributed/Megatron-LM/megatron_npu/tests_gpt

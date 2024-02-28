@@ -20,7 +20,7 @@ if [[ "$param" == "all" || "$param" == "hccl-test" || "$param" == "ais-flops" ||
     if [[ "$param" == "all" ]]; then
         bash "$hccl_dir/hccl_test.sh"
         bash "$flops_dir/flops_test.sh"
-        bash "$distributed_dir/sever_train.sh"
+        bash "$distributed_dir/server_train.sh"
         bash "$ais_dir/ais_bench.sh"
     # 如果参数为hccl-test，则执行hccl_test.sh脚本
     elif [[ "$param" == "hccl-test" ]]; then
@@ -31,9 +31,9 @@ if [[ "$param" == "all" || "$param" == "hccl-test" || "$param" == "ais-flops" ||
     # 如果参数为flops-test，则执行flops_test.sh脚本
     elif [[ "$param" == "flops-test" ]]; then
         bash "$flops_dir/flops_test.sh" &
-    # 如果参数为distributed，则执行sever_train.sh脚本
+    # 如果参数为distributed，则执行server_train.sh脚本
     elif [[ "$param" == "distributed" ]]; then
-        bash "$distributed_dir/sever_train.sh" &
+        bash "$distributed_dir/server_train.sh" &
     else
         echo "Invalid parameter."
         exit 1

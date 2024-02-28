@@ -10,7 +10,7 @@
 
 3. 为了成功验证，需要独占环境，脚本会杀掉其他执行中的进程，请用户注意并自行处理可能出现的问题。
 
-4. hccl_test.sh, flops_test.sh, ais_bench.sh和sever_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04，
+4. hccl_test.sh, flops_test.sh, ais_bench.sh和server_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04，
 用户可根据实际情况进行修改。
 5. test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、distributed、ais-flops，all会将所有测试项依次执行，需要准备好所有必要的先置条件（参考后续单项测试功能介绍）；其他参数分别对应hccl集群通信验证、物理机算力测试、集群训练、有效算力验收。
 ```
@@ -83,9 +83,9 @@
   172.19.20.28 2
   172.19.20.29 3
 ```
-3. 所有参与测试的集群节点准备测试脚本sever_train.sh和pretrain_gpt_distributed_bf16_test.sh，可参考代码仓中的脚本进行修改。
+3. 所有参与测试的集群节点准备测试脚本server_train.sh和pretrain_gpt_distributed_bf16_test.sh，可参考代码仓中的脚本进行修改。
 
-修改sever_train.sh文件的train_data，该字段为训练数据集的保存路径，生成数据集可参考[这里](https://gitee.com/ascend/Megatron-LM)。
+修改server_train.sh文件的train_data，该字段为训练数据集的保存路径，生成数据集可参考[这里](https://gitee.com/ascend/Megatron-LM)。
 
 修改pretrain_gpt_distributed_bf16_test.sh脚本：
 
@@ -93,15 +93,47 @@
 |--------------|-----------------------------------------|
 | NPU_PER_NODE | 每个节点的NPU数量，可修改                          |
 | MASTER_PORT  | 网络端口，可修改                                |
-| LOCAL_ADDR   | 集群中所有服务器的业务网口IP地址，建议根据实际情况修改            |
+| LOCAL_ADDR   | 集群中所有服务器的业务网口IP地址，用户根据实际情况和标注的方法进行修改    |
 | NNODES       | 节点数量，可修改                                |
 | NODE_RANK    | 每个节点的rank编号，不建议修改                       |
 | WORLD_SIZE   | 集群中所有NPU数量，不建议修改                        |
 | DATA_PATH    | 训练数据集路径，my-t5_text_sentence为训练数据的前缀，可修改 |
 
+注：参数LOCAL_ADDR为本节点业务网口IP地址，配置方式在以下三种方式中选择一种，请仔细查看三种配置方式的配置场景，避免现场批量拉起训练任务失败。
+    
+a. 通过hostname -I命令查询，如果集群中所有服务器的业务网口IP地址所在位置一致，则可以在脚本中使用该方式获取业务IP地址。  
+执行hostname -I（注意是大写的i）命令查询业务网口IP地址的位置，如以下回显（仅为示例）：
+
+    192.168.2.100 172.17.0.1 192.168.84.0
+
+若第1个为业务网口IP地址，则脚本中print $取值为“1”，依次类推，用户需根据实际业务网口IP地址所在位置进行取值，脚本中的“LOCAL_ADDR”示例：
+
+    LOCAL_ADDR=$(hostname -I | awk '{print $1}')
+    
+b. 通过ifconfig命令查询业务网口名称，如果集群中所有服务器的业务网口名称一致，则可以在脚本中使用该方式获取业务IP地址。  
+在脚本中增加以下内容，“nic_name”为业务网口名称，“enp189s0f0”仅为示例，请根据现场实际业务网口名称进行替换。
+```
+    nic_name='enp189s0f0'
+    LOCAL_ADDR=$(ifconfig $nic_name | grep inet | awk 'NR==1 {print $2}')
+```
+c. 如果集群中服务器业务IP位置和网口名称都存在不相同，则使用本方式进行配置，通过查询本服务器所有IP与指定业务IP段进行比对，查找到相同IP网段即为业务IP地址。  
+    将脚本中的“LOCAL_ADDR=$(hostname -I | awk '{print $1}')”替换为如下内容，脚本中“192.168.\*”为比对的业务IP段示例，请根据现场实际业务网口IP规划进行替换。  
+    如现场某一台服务器业务IP地址为192.168.2.11，则可以将脚本中“192.168.\*”修改为192.168.2.*，需要确保脚本中的IP段只能和业务IP段相同，不能和其他网络平面的IP段相同，否则会导致获取当前服务器业务IP地址失败。
+```
+    for i in {0..7}
+    do
+        common_tmp="hostname -I | awk '{print \$$i}'"
+        addr_tmp=$(eval $common_tmp)
+        if [[ $addr_tmp == 192.168.* ]];then
+            LOCAL_ADDR=$addr_tmp
+            break
+        fi
+    done
+```
+准备好所有脚本执行如下指令：
 ```
     mkdir -p /home/hwtest/distributed
-    cp sever_train.sh pretrain_gpt_distributed_bf16_test.sh /home/hwtest/distributed
+    cp server_train.sh pretrain_gpt_distributed_bf16_test.sh /home/hwtest/distributed
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/distributed
 ```
 4. 执行`source test_model.sh distributed`。
