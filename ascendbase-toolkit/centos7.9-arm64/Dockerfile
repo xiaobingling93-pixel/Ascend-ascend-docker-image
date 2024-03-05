@@ -1,6 +1,7 @@
 FROM centos:7
 
 ARG LIBSTDCXX=libstdc++.so.6.0.24
+ARG PYVERSION=3.10.5
 WORKDIR /tmp
 COPY . ./
 
@@ -23,16 +24,16 @@ RUN sed -i "s@gpgcheck=1@gpgcheck=0@g" /etc/yum.repos.d/CentOS-Base.repo && \
 
 SHELL ["/usr/bin/scl", "enable", "devtoolset-7"]
 
-ENV LD_LIBRARY_PATH=/usr/local/python3.7.5/lib: \
-    PATH=/usr/local/python3.7.5/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV LD_LIBRARY_PATH=/usr/local/python${PYVERSION}/lib: \
+    PATH=/usr/local/python${PYVERSION}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # 安装Python
 RUN umask 0022  && \
-    wget https://repo.huaweicloud.com/python/3.7.5/Python-3.7.5.tar.xz && \
-    tar -xf Python-3.7.5.tar.xz && cd Python-3.7.5 && ./configure --prefix=/usr/local/python3.7.5 --enable-shared && \
+    wget https://repo.huaweicloud.com/python/${PYVERSION}/Python-${PYVERSION}.tar.xz && \
+    tar -xf Python-${PYVERSION}.tar.xz && cd Python-${PYVERSION} && ./configure --prefix=/usr/local/python${PYVERSION} --enable-shared && \
     make -j 20 && make install && \
-    ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python3 && \
-    ln -sf /usr/local/python3.7.5/bin/pip3 /usr/bin/pip3 && \
+    ln -sf /usr/local/python${PYVERSION}/bin/python3 /usr/bin/python3 && \
+    ln -sf /usr/local/python${PYVERSION}/bin/pip3 /usr/bin/pip3 && \
     cd .. && \
     rm -rf Python* && \
     mkdir -p ~/.pip  && \

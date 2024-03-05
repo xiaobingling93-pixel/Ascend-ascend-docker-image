@@ -80,14 +80,14 @@ b.请在当前目录准备以下文件
 c.在当前目录执行以下命令构建镜像ascendbase-infer。
 
 ```
-docker build -t ascendbase-infer:base_TAG .
+DOCKER_BUILDKIT=1 docker build -t ascendbase-infer:base_TAG .
 ```
 
 注意不要遗漏命令结尾的“.”，命令解释如表3所示。
 如需在此步骤配置系统网络代理，命令参考如下：
 
 ```
-docker build -t ascendbase-infer:base_TAG --build-arg http_proxy=http://proxyserverip:port --build-arg https_proxy=http://proxyserverip:port .
+DOCKER_BUILDKIT=1 docker build -t ascendbase-infer:base_TAG --build-arg http_proxy=http://proxyserverip:port --build-arg https_proxy=http://proxyserverip:port .
 ```
 
 其中proxyserverip为代理服务器的ip地址，port为端口。
@@ -121,7 +121,7 @@ b.请在当前目录准备以下软件包和相关文件。
 c.在当前目录执行以下命令构建镜像ascend-infer。
 
 ```
-docker build -t ascend-infer:infer_TAG --build-arg BASE_VERSION=base_TAG --build-arg .
+DOCKER_BUILDKIT=1 docker build -t ascend-infer:infer_TAG --build-arg BASE_VERSION=base_TAG --build-arg .
 ```
 
 注意不要遗漏命令结尾的“.”命令解释如表5所示。
@@ -195,17 +195,17 @@ b.请在当前目录准备以下文件。
 c.在当前目录执行以下命令构建镜像ascendbase-toolkit。
 
 ```
-docker build -t ascendbase-toolkit:base_TAG .
+DOCKER_BUILDKIT=1 docker build -t ascendbase-toolkit:base_TAG .
 ```
 
 注意不要遗漏命令结尾的“.”，命令解释如表8所示。构建镜像时，如果在pip安装python依赖包时出现超时或证书错误，请修改Dockerfile更换pip源。
 如需在此步骤配置系统网络代理，命令参考如下：
 
 ```
-docker build -t ascendbase-toolkit:base_TAG --build-arg http_proxy=http://proxyserverip:port --build-arg https_proxy=http://proxyserverip:port .
+DOCKER_BUILDKIT=1 docker build -t ascendbase-toolkit:base_TAG --build-arg http_proxy=http://proxyserverip:port --build-arg https_proxy=http://proxyserverip:port .
 ```
 
-其中proxyserverip为代理服务器的ip地址，port为端口。
+其中proxyserverip为代理服务器的ip地址，port为端口。该镜像中的python版本默认为3.10.5，如果需要其他版本，需要额外指定`--build-arg PYVERSION={version}`，并将`{version}`替换为具体的python版本。
 
 表8 命令参数说明
 
@@ -227,16 +227,17 @@ cd ascend-toolkit
 
 表9 所需软件或文件
 
-|                     软件或文件                      |                    说明                    |                获取方法                |
-|:----------------------------------------------:|:----------------------------------------:|:----------------------------------:|
-| Ascend-cann-toolkit_{version}_linux-{arch}.run | 深度学习加速引擎包。其中{version}表示软件包版本，{arch}表示架构。 | 可参考<a href="#url">构建镜像所需文件获取链接</a> |
-|                   Dockerfile                   |                 制作镜像需要。                  |      已存在于当前目录。用户可根据实际需要自行定制。       |
+|                       软件或文件                        |                    说明                    |                获取方法                |
+|:--------------------------------------------------:|:----------------------------------------:|:----------------------------------:|
+|   Ascend-cann-toolkit_{version}_linux-{arch}.run   | 深度学习加速引擎包。其中{version}表示软件包版本，{arch}表示架构。 | 可参考<a href="#url">构建镜像所需文件获取链接</a> |
+| Ascend-cann-kernels-{910/910b}_{version}_linux.run |        二进制算子包。其中{version}表示软件包版本。        | 可参考<a href="#url">构建镜像所需文件获取链接</a> |
+|                     Dockerfile                     |                 制作镜像需要。                  |      已存在于当前目录。用户可根据实际需要自行定制。       |
 
 c.在当前目录执行以下命令构建镜像ascend-toolkit。
 
 ```
-x86_64: docker build -t ascend-toolkit:toolkit_TAG --build-arg BASE_VERSION=base_TAG .
-aarch64: docker build -t ascend-toolkit:toolkit_TAG --build-arg BASE_VERSION=base_TAG -f Dockerfile_aarch64 .
+x86_64: DOCKER_BUILDKIT=1 docker build -t ascend-toolkit:toolkit_TAG --build-arg BASE_VERSION=base_TAG .
+aarch64: DOCKER_BUILDKIT=1 docker build -t ascend-toolkit:toolkit_TAG --build-arg BASE_VERSION=base_TAG -f Dockerfile_aarch64 .
 ```
 
 注意不要遗漏命令结尾的“.”，命令解释如表4-5所示。
@@ -274,14 +275,14 @@ b.请在当前目录准备以下软件包和相关文件。
 c.在当前目录执行以下命令构建镜像ascend-tensorflow。
 
 ```
-docker build -t ascend-tensorflow:tensorflow_TAG --build-arg BASE_VERSION=toolkit_TAG .
+DOCKER_BUILDKIT=1 docker build -t ascend-tensorflow:tensorflow_TAG --build-arg BASE_VERSION=toolkit_TAG .
 ```
 
 注意不要遗漏命令结尾的“.”，命令解释如表12所示
 如需在此步骤配置系统网络代理，命令参考如下：
 
 ```
-docker build -t ascend-tensorflow:tensorflow_TAG --build-arg BASE_VERSION=toolkit_TAG --build-arg http_proxy=http://proxyserverip:port --build-arg https_proxy=http://proxyserverip:port .
+DOCKER_BUILDKIT=1 docker build -t ascend-tensorflow:tensorflow_TAG --build-arg BASE_VERSION=toolkit_TAG --build-arg http_proxy=http://proxyserverip:port --build-arg https_proxy=http://proxyserverip:port .
 ```
 
 其中proxyserverip为代理服务器的ip地址，port为端口。
