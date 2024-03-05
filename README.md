@@ -121,7 +121,7 @@ b.请在当前目录准备以下软件包和相关文件。
 c.在当前目录执行以下命令构建镜像ascend-infer。
 
 ```
-DOCKER_BUILDKIT=1 docker build -t ascend-infer:infer_TAG --build-arg BASE_VERSION=base_TAG --build-arg .
+DOCKER_BUILDKIT=1 docker build -t ascend-infer:infer_TAG --no-cache --build-arg BASE_VERSION=base_TAG --build-arg .
 ```
 
 注意不要遗漏命令结尾的“.”命令解释如表5所示。
@@ -236,8 +236,8 @@ cd ascend-toolkit
 c.在当前目录执行以下命令构建镜像ascend-toolkit。
 
 ```
-x86_64: DOCKER_BUILDKIT=1 docker build -t ascend-toolkit:toolkit_TAG --build-arg BASE_VERSION=base_TAG .
-aarch64: DOCKER_BUILDKIT=1 docker build -t ascend-toolkit:toolkit_TAG --build-arg BASE_VERSION=base_TAG -f Dockerfile_aarch64 .
+x86_64: DOCKER_BUILDKIT=1 docker build -t ascend-toolkit:toolkit_TAG --no-cache --build-arg BASE_VERSION=base_TAG .
+aarch64: DOCKER_BUILDKIT=1 docker build -t ascend-toolkit:toolkit_TAG --no-cache --build-arg BASE_VERSION=base_TAG -f Dockerfile_aarch64 .
 ```
 
 注意不要遗漏命令结尾的“.”，命令解释如表4-5所示。
@@ -275,14 +275,14 @@ b.请在当前目录准备以下软件包和相关文件。
 c.在当前目录执行以下命令构建镜像ascend-tensorflow。
 
 ```
-DOCKER_BUILDKIT=1 docker build -t ascend-tensorflow:tensorflow_TAG --build-arg BASE_VERSION=toolkit_TAG .
+DOCKER_BUILDKIT=1 docker build -t ascend-tensorflow:tensorflow_TAG --no-cache --build-arg BASE_VERSION=toolkit_TAG .
 ```
 
 注意不要遗漏命令结尾的“.”，命令解释如表12所示
 如需在此步骤配置系统网络代理，命令参考如下：
 
 ```
-DOCKER_BUILDKIT=1 docker build -t ascend-tensorflow:tensorflow_TAG --build-arg BASE_VERSION=toolkit_TAG --build-arg http_proxy=http://proxyserverip:port --build-arg https_proxy=http://proxyserverip:port .
+DOCKER_BUILDKIT=1 docker build -t ascend-tensorflow:tensorflow_TAG --no-cache --build-arg BASE_VERSION=toolkit_TAG --build-arg http_proxy=http://proxyserverip:port --build-arg https_proxy=http://proxyserverip:port .
 ```
 
 其中proxyserverip为代理服务器的ip地址，port为端口。
