@@ -12,7 +12,7 @@
 
 4. hccl_test.sh, flops_test.sh, ais_bench.sh和server_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04，
 用户可根据实际情况进行修改。
-5. test_model.sh为入口脚本，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、distributed、ais-flops，all会将所有测试项依次执行，需要准备好所有必要的先置条件（参考后续单项测试功能介绍）；其他参数分别对应hccl集群通信验证、物理机算力测试、集群训练、有效算力验收。
+5. test_model.sh为入口脚本，放到目录/home/hwtest/下，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、distributed、ais-flops，all会将所有测试项依次执行，需要准备好所有必要的先置条件（参考后续单项测试功能介绍）；其他参数分别对应hccl集群通信验证、物理机算力测试、集群训练、有效算力验收。
 ```
    source test_model.sh &
    或者
@@ -25,6 +25,7 @@
 |--------|--------|-------------------------------|-----------|-----|
 | 23.0.0 | 7.0.0  | MindSpore 2.2.10,Torch 1.11.0 | 5.0.0     |     |
 
+8. 确保物理机的HwHiAiUser的id为1000，和镜像里的HwHiAiUser保持一致。
 ## hccl-test集合通信
 
 1. 检查集群环境的健康状态，可使用hccn_tool工具进行检查。
@@ -47,7 +48,7 @@
     51.38.65.157：8
     51.38.68.149：8
 ```
-5. 所有参与测试的集群节点准备hccl_test.sh测试脚本，可参考代码中hccl_test.sh进行修改。
+5. 所有参与测试的集群节点准备hccl_test.sh测试脚本，可参考代码中hccl_test.sh进行修改，脚本中的非主节点的sleep时间可根据实际情况进行修改。
 ```
     mkdir -p /home/hwtest/hccl
     cp hccl_test.sh /home/hwtest/hccl
@@ -96,6 +97,7 @@
 | LOCAL_ADDR   | 集群中所有服务器的业务网口IP地址，用户根据实际情况和标注的方法进行修改    |
 | NNODES       | 节点数量，可修改                                |
 | NODE_RANK    | 每个节点的rank编号，不建议修改                       |
+| TRAIN_ITERS  | 训练迭代次数，默认为500000，用户可自主修改                |
 | WORLD_SIZE   | 集群中所有NPU数量，不建议修改                        |
 | DATA_PATH    | 训练数据集路径，my-t5_text_sentence为训练数据的前缀，可修改 |
 
@@ -161,5 +163,6 @@ testcases镜像作为有效算力验收时使用的镜像，支持resnet50和ber
     chown -R HwHiAiUser:HwHiAiUser /home/hwtest/ais
 ```
 4. 执行`source test_model.sh ais-flops`。
+5. 执行的结果将会保存到/home/hwtest/ais目录下，resnet50为resnet.json，bert-large为bert_large.json
 5. 检查执行日志，resnet50日志位于/root/ais_log/resnet_log，bert-large日志位于/root/ais_log/bert_log。
-6. 确保所有数据集和文件的属主为HwHiAiUser。
+6. 确保所有数据集和文件的属主为HwHiAiUser，且id为1000。

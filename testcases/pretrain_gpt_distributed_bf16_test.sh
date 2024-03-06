@@ -4,6 +4,7 @@ source env_npu.sh
 NPU_PER_NODE=$(find /dev -name 'davinci[0-9]*' | wc -l)
 MASTER_ADDR=$(grep "master"  node_rank | awk '{print $1}')
 MASTER_PORT=60077
+TRAIN_ITERS=500000
 LOCAL_ADDR=$(hostname -I | awk '{print $1}')
 NNODES=$(grep -v '^$' node_rank | grep -v "^#"| wc -l)
 NODE_RANK=$(grep "$LOCAL_ADDR" node_rank | awk '{print $2}')
@@ -48,7 +49,7 @@ python3 -m torch.distributed.launch $DISTRIBUTED_ARGS \
        --global-batch-size 8 \
        --seq-length 1024 \
        --max-position-embeddings 8192 \
-       --train-iters 500000 \
+       --train-iters $TRAIN_ITERS \
        --lr-decay-iters 320000 \
        --save $CHECKPOINT_PATH \
        --load $CHECKPOINT_PATH \
