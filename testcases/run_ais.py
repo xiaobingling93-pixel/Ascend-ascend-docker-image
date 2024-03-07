@@ -7,6 +7,7 @@ import platform
 import re
 import subprocess
 import sys
+import json
 
 
 class BenchMark:
@@ -73,7 +74,9 @@ class BenchMark:
         self._check_chip()
         self._modify_config_file()
         self._run()
+        result_save_path = r"/home/hwtest/ais"
         log_file_path = f"{self.code_dir}/log/stub.log"
+        res_file = "bert_large.json"
         with open(log_file_path, "r", encoding="utf-8") as f:
             content = f.read()
             res = {}
@@ -81,12 +84,14 @@ class BenchMark:
             throughput_ratio = float(re.findall(pattern, content)[0].split('"')[3])
             if self.type == "resnet50":
                 res["throughput_ratio"] = f"{round(throughput_ratio)} images/s"
+                res_file = "resnet.json"
             else:
                 res["throughput_ratio"] = f"{round(throughput_ratio)} sentences/s"
             pattern = '"accuracy.*'
             accuracy = float(re.findall(pattern, content)[0].split('"')[3])
             res["accuracy"] = f"{accuracy:.1%}"
-        print(res)
+        with open(os.path.join(result_save_path, res_file), 'w') as f:
+            json.dump(res, f, indent=4)
 
 
 def main():
