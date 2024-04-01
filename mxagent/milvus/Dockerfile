@@ -4,6 +4,7 @@ WORKDIR /tmp
 COPY . ./
 RUN chmod 777 /tmp
 ENV GIT_SSL_NO_VERIFY=1
+ARG PLATFORM=910B
 
 RUN yum update -y && yum install -y gcc g++ make tar openssl-devel vim libatomic libstdc++-static git openblas-devel python3-pip python3-devel ninja-build && \
     yum install -y net-tools git gfortran tbb tbb-devel boost boost-devel thrift thrift-devel.aarch64 re2 re2-devel zip wget dos2unix unzip ccache xz-devel
@@ -57,9 +58,9 @@ ENV ASCEND_TOOLKIT_HOME=/usr/local/Ascend/ascend-toolkit/latest
 ENV ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
 ENV PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/python/site-packages:/usr/local/Ascend/ascend-toolkit/latest/opp/built-in/op_impl/ai_core/tbe
 ENV ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
-ENV PATH=/usr/local/Ascend/ascend-toolkit/latest/bin:/usr/local/Ascend/ascend-toolkit/latest/compiler/ccec_compiler/bin:/usr/local/Ascend/ascend-toolkit/latest/tools/ccec_compiler/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/usr/local/Ascend/ascend-toolkit/latest/bin:/usr/local/Ascend/ascend-toolkit/latest/compiler/ccec_compiler/bin:$GOROOT/bin:$GOPATH:/usr/local/Ascend/ascend-toolkit/latest/tools/ccec_compiler/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-RUN bash Ascend-mindxsdk-mxindex_*.run --quiet --install --install-path=/usr/local/Ascend --platform=910B
+RUN bash Ascend-mindxsdk-mxindex_*.run --quiet --install --install-path=/usr/local/Ascend --platform=${PLATFORM}
 ENV MX_INDEX_MODELPATH=/home/ascend/modelpath
 RUN cd /usr/local/Ascend/mxIndex/ops && ./custom_opp_aarch64.run && mkdir -p /home/ascend/modelpath
 
