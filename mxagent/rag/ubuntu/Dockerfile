@@ -21,6 +21,8 @@ RUN pip3 install --upgrade setuptools && pip3 install numpy==1.26.4 decorator==5
 
 RUN pip3 install torch=="${TORCH_VERSION}" torch_npu-"${TORCH_VERSION}"*-cp39-*aarch64.whl
 
+RUN pip3 install mxaiagent-*.whl
+
 RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser && \
     bash Ascend-cann-toolkit*.run --install --quiet && \
     bash Ascend-cann-kernels*.run --install --quiet
