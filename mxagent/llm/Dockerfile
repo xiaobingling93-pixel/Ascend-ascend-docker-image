@@ -15,11 +15,16 @@ RUN pip3 install numpy==1.26.4 decorator==5.1.1 sympy==1.12 cffi==1.16.0 pyyaml=
 
 RUN pip3 install torch=="${TORCH_VERSION}" torch_npu-"${TORCH_VERSION}"*-cp310-*aarch64.whl apex-0.1_*-cp310-*aarch64.whl
 
-RUN pip3 install httpx loguru==0.7.2 transformers==4.30.2 accelerate==0.27.2 tokenizers==0.13.3 SentencePiece==0.2.0 tiktoken==0.6.0 fastapi==0.110.0 python-multipart==0.0.9 uvicorn==0.29.0
-
 RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser && \
     bash Ascend-cann-toolkit*.run --install --quiet && \
     bash Ascend-cann-kernels*.run --install --quiet
+ENV ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
+ENV TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit
+ENV ASCEND_TOOLKIT_HOME=/usr/local/Ascend/ascend-toolkit/latest
+ENV ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/opp
+ENV ASCEND_AICPU_PATH=/usr/local/Ascend/ascend-toolkit/latest
+ENV LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
+
 
 RUN mkdir -p /usr/local/Ascend/atb-models/ && tar -zxf Ascend-mindie-atb-models_*-abi0.tar.gz -C /usr/local/Ascend/atb-models/ && \
     bash Ascend-mindie-atb_*_abi0.run --install --quiet && \
