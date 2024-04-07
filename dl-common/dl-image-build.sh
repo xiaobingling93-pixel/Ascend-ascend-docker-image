@@ -33,7 +33,7 @@ build_hccl_controller(){
 build_noded(){
   unzip Ascend-mindxdl-noded_${version}_linux-${arch}.zip -d ascend-noded
   cd ${root_dir}/ascend-noded || exit 1
-  docker build --no-cache -t noded:${version} ./
+  docker build --no-cache -t noded:v${version} ./
 }
 
 build_ascend_operator(){
@@ -75,6 +75,7 @@ build_volcano(){
 }
 
 main(){
+  cp /usr1/mindxdl_package/* ${root_dir}/
   case $1 in
   "all")
   build_device_plugin
