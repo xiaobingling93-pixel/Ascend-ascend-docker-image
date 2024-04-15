@@ -9,7 +9,7 @@ ARG TORCH_VERSION=2.1.0
 ARG PLATFORM=910B
 
 
-RUN apt-get update && apt-get install -y build-essential python3.9 curl python3.9-dev python3.9-distutils vim tar zip unzip git wget dos2unix make gcc g++ ccache gfortran libssl-dev swig git unzip wget ffmpeg
+RUN apt-get update && apt-get install -y build-essential python3.9 python3.9-dev python3.9-distutils vim tar zip unzip git curl wget dos2unix make gcc g++ ccache gfortran libssl-dev swig ffmpeg
 RUN curl -k https://bootstrap.pypa.io/get-pip.py | python3.9 &&  update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
 
 RUN wget --no-check-certificate https://cmake.org/files/v3.24/cmake-3.24.3.tar.gz && \
