@@ -19,7 +19,7 @@ RUN pip3 install numpy==1.26.4 decorator==5.1.1 sympy==1.12 cffi==1.16.0 pyyaml=
 # llm depend
 RUN pip3 install -r requirements.txt
 # torch_npu and apex
-RUN pip3 install torch=="${TORCH_VERSION}" torch_npu-"${TORCH_VERSION}"*-cp310-*aarch64.whl apex-0.1_*-cp310-*aarch64.whl
+RUN pip3 install torch=="${TORCH_VERSION}" torch_npu-"${TORCH_VERSION}"*-cp310-*aarch64.whl apex-0.1_*-cp310-*aarch64.whl --index-url https://download.pytorch.org/whl/cpu
 
 # cann-toolkit and kernel
 RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser && \

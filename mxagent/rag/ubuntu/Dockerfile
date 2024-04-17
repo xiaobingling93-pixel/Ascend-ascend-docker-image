@@ -19,7 +19,7 @@ RUN wget --no-check-certificate https://cmake.org/files/v3.24/cmake-3.24.3.tar.g
 
 RUN pip3 install --upgrade setuptools && pip3 install numpy==1.26.4 decorator==5.1.1 sympy==1.12 cffi==1.16.0 pyyaml==6.0.1 pathlib2==2.3.7.post1 protobuf==5.26.0 scipy==1.12.0 requests==2.31.0 psutil==5.9.8 absl-py==2.1.0 attrs==23.2.0
 
-RUN pip3 install torch=="${TORCH_VERSION}" torch_npu-"${TORCH_VERSION}"*-cp39-*aarch64.whl
+RUN pip3 install torch=="${TORCH_VERSION}" torch_npu-"${TORCH_VERSION}"*-cp39-*aarch64.whl --index-url https://download.pytorch.org/whl/cpu
 
 RUN pip3 install mxaiagent-*.whl
 
