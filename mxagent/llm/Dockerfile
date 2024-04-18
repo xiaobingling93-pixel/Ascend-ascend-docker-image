@@ -19,7 +19,7 @@ RUN pip3 install numpy==1.26.4 decorator==5.1.1 sympy==1.12 cffi==1.16.0 pyyaml=
 # llm depend
 RUN pip3 install -r requirements.txt
 # torch_npu and apex
-RUN pip3 install torch=="${TORCH_VERSION}" torch_npu-"${TORCH_VERSION}"*-cp310-*aarch64.whl apex-0.1_*-cp310-*aarch64.whl --index-url https://download.pytorch.org/whl/cpu
+RUN pip3 install torch=="${TORCH_VERSION}" torch_npu-"${TORCH_VERSION}"*-cp310-*.whl apex-0.1_*-cp310-*.whl --index-url https://download.pytorch.org/whl/cpu
 
 # cann-toolkit and kernel
 RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser && \
@@ -30,7 +30,7 @@ RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser && \
 RUN source /usr/local/Ascend/ascend-toolkit/set_env.sh && \
     ./Ascend-mindie-atb_*_abi0.run --install --quiet && \
     mkdir -p /usr/local/Ascend/atb-models/ && tar -zxf Ascend-mindie-atb-models_*-abi0.tar.gz -C /usr/local/Ascend/atb-models/ && \
-    unzip -o Ascend-mindie-service_*.zip && tar -zxf mindie-service_*-aarch64.tar.gz -C /usr/local/Ascend/ && cd /usr/local/Ascend/mindie-service*/bin && pip3 install ock_hntc_*.whl --force-reinstall
+    unzip -o Ascend-mindie-service_*.zip && tar -zxf mindie-service_*.tar.gz -C /usr/local/Ascend/ && cd /usr/local/Ascend/mindie-service*/bin && pip3 install ock_hntc_*.whl --force-reinstall
 
 RUN chown -R HwHiAiUser:HwHiAiUser /usr/local/Ascend/atb/ && \
     chown -R HwHiAiUser:HwHiAiUser /usr/local/Ascend/mindie-service* && \
