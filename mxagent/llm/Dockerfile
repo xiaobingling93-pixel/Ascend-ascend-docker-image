@@ -26,23 +26,16 @@ RUN useradd -d /home/HwHiAiUser -u 1000 -m -s /bin/bash HwHiAiUser && \
     ./Ascend-cann-toolkit*.run --install --quiet && \
     ./Ascend-cann-kernels*.run --install --quiet
 
+# mindie-atb-models
+RUN mkdir -p /usr/local/Ascend/atb-models && \
+    tar -zxf Ascend-mindie-atb-models_*-abi0.tar.gz -C /usr/local/Ascend/atb-models/ && \
+    cd /usr/local/Ascend/atb-models/ && \
+    pip3 install atb_llm-0.0.1*.whl
+
 # mindie
 RUN source /usr/local/Ascend/ascend-toolkit/set_env.sh && \
-    ./Ascend-mindie-atb_*_abi0.run --install --quiet && \
-    mkdir -p /usr/local/Ascend/atb-models/ && tar -zxf Ascend-mindie-atb-models_*-abi0.tar.gz -C /usr/local/Ascend/atb-models/ && \
-    unzip -o Ascend-mindie-service_*.zip && tar -zxf mindie-service_*.tar.gz -C /usr/local/Ascend/ && cd /usr/local/Ascend/mindie-service*/bin && pip3 install ock_hntc_*.whl --force-reinstall
-
-RUN chown -R HwHiAiUser:HwHiAiUser /usr/local/Ascend/atb/ && \
-    chown -R HwHiAiUser:HwHiAiUser /usr/local/Ascend/mindie-service* && \
-    chmod -R 550 /usr/local/Ascend/mindie-service*/bin/ && \
-    chmod -R 550 /usr/local/Ascend/mindie-service*/lib/ && \
-    chmod -R 550 /usr/local/Ascend/mindie-service*/include/ && \
-    chmod -R 550 /usr/local/Ascend/mindie-service*/scripts/ && \
-    chmod 750 /usr/local/Ascend/mindie-service*/logs/ && \
-    chmod 750 /usr/local/Ascend/mindie-service*/conf/ && \
-    chmod 640 /usr/local/Ascend/mindie-service*/conf/config.json && \
-    chmod 750 /usr/local/Ascend/mindie-service*/security/ && \
-    chmod -R 700 /usr/local/Ascend/mindie-service*/security/*
+    ./Ascend-mindie*.run --install --quiet
+   
 
 # clean tmp dir
 RUN rm -rf ./*
