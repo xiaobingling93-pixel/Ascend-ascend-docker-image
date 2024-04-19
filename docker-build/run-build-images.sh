@@ -45,6 +45,8 @@ function parse_script_args()
                 build_image ascendbase-toolkit
             elif [[ "${image}" = "hccl-test" ]]; then
                 build_image hccl-test
+            elif [[ "${image}" = "testcases" ]]; then
+                build_image testcases
             elif [[ "${image}" = "cluster" ]]; then
                 build_image cluster-flops-test
             elif [[ "${image}" = "infer-310b" ]]; then

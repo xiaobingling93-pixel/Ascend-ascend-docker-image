@@ -3,26 +3,23 @@
 arch=$(uname -m)
 
 #准备依赖包
-cp -rf /usr1/package930/mindspore-*linux_$(arch).whl .
-cp -rf /usr1/package930/mindx_elastic-0.0.1-py37-none-linux_$(arch).whl .
-cp -rf /usr1/package930/Ascend-mindx-toolbox*-$(arch).run .
-cp -rf /usr1/package930/torch_npu-1.11.0.post*-$(arch).whl .
-cp -rf /usr1/package930/torch-1.11.0-*-$(arch).whl .
-cp -rf /usr1/package930/apex-0.1_ascend_*-$(arch).whl .
-cp -rf /usr1/package930/Ascend-mindx-toolbox*-$(arch).run .
-rm -f Ascend-cann-*-$(arch).run
-cp -rf /usr1/package930/Ascend-cann-toolkit_7.0*-$(arch).run .
-cp -rf /usr1/package930/Ascend-cann-kernels-910*.run .
+cp -rf /usr1/package/mindspore-*linux_$(arch).whl .
+cp -rf /usr1/package/mindx_elastic-0.0.1-py39-none-linux_$(arch).whl .
+cp -rf /usr1/package/Ascend-mindx-toolbox*-$(arch).run .
+cp -rf /usr1/package/torch-1.11.0*-cp39-cp39*_"$(arch)".whl .
+cp -rf /usr1/package/torch_npu-1.11.0*-cp39-cp39-linux_"$(arch)".whl .
+cp -rf /usr1/package/apex-0.1_ascend_*-cp39-cp39-linux_"${arch}".whl .
+cp -rf /usr1/package/Ascend-mindx-toolbox*-$(arch).run .
+cp -r  /usr1/package/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-$(arch)-1.0-r2.3 .
+cp -r  /usr1/package/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-$(arch)-1.0-r2.3 .
 
-cp -rf /usr1/package930/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-$(arch)-1.0-r2.2 .
-cp -rf /usr1/package930/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-$(arch)-1.0-r2.2 .
-
-#准备模型和数据集
-if [ -d Megatron-LM ]; then
-    rm -rf Megatron-LM
-fi
-
-cp -r /usr1/package930/testcases-data-model/Megatron-LM .
+get_megatron(){
+  git clone https://github.com/NVIDIA/Megatron-LM.git
+  cd Megatron-LM || exit 1
+  git checkout 285068c8108e0e8e6538f54fe27c3ee86c5217a2
+  git clone https://gitee.com/ascend/Megatron-LM.git megatron_npu
+  cd - || exit 1
+}
 
 #检查依赖包
 have_mindspore=$(find . |grep "mindspore"|grep $arch|wc -l)
@@ -46,7 +43,7 @@ if [ $have_torch_npu == 0 ]; then
     exit 1
 fi
 have_apex=$(find . |grep "apex"|grep $arch|wc -l)
-if [ $apex == 0 ]; then
+if [ $have_apex == 0 ]; then
     echo "please put apex wheel package here"
     exit 1
 fi
@@ -56,9 +53,12 @@ if [ $have_toolbox == 0 ]; then
     exit 1
 fi
 
+get_megatron
+
 echo "start build"
 if [ $arch == "x86_64" ];then
-    DOCKER_BUILDKIT=1  docker build . -t testcases:ubuntu18.04-x64
+  exit 0
+    DOCKER_BUILDKIT=1  docker build -t testcases:ubuntu20.04-x64 --build-arg BASE_VERSION=A2-ubuntu20.04-x64 .
 else
-    DOCKER_BUILDKIT=1  docker build . -f Dockerfile_aarch64 -t testcases:ubuntu18.04-arm64
+    DOCKER_BUILDKIT=1  docker build -f Dockerfile_aarch64 -t testcases:ubuntu20.04-arm64 --build-arg BASE_VERSION=A2-ubuntu20.04-arm64 .
 fi

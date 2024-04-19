@@ -1,44 +1,18 @@
-# syntax = docker/dockerfile:experimental
-FROM ubuntu:18.04 as buildtemp
+ARG BASE_VERSION
+ARG BASE=ascend-toolkit:$BASE_VERSION
+FROM ubuntu:20.04 as buildtemp
+COPY . /tmp
+
+FROM $BASE
 
 WORKDIR /tmp
-COPY . ./
 
-FROM ubuntu:18.04
-# 系统包,增加libfreetype6-dev pkg-config libpng-dev，否则安装matplotlib报错
-RUN echo "deb [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic main restricted universe multiverse\n\
-    deb-src [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic main restricted universe multiverse\n\
-    deb [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-updates main restricted universe multiverse\n\
-    deb-src [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-updates main restricted universe multiverse\n\
-    deb [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-backports main restricted universe multiverse\n\
-    deb-src [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-backports main restricted universe multiverse\n\
-    deb [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-security main restricted universe multiverse\n\
-    deb-src [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-security main restricted universe multiverse\n" > /etc/apt/sources.list && \
-    apt-get -o "Acquire::https::Verify-Peer=false" update && \
-    apt-get -o "Acquire::https::Verify-Peer=false" install -y --no-install-recommends ca-certificates && \
-    apt-get -o "Acquire::https::Verify-Peer=false" install -y --no-install-recommends wget vim sudo openssl \
-    libnuma1 curl g++ libfreetype6-dev pkg-config libpng-dev unzip libblas3 liblapack3 liblapack-dev libblas-dev \
-    gfortran libhdf5-dev libffi-dev libicu60 libxml2 2to3 python3-lib2to3 python3-toolz libgl1-mesa-glx \
-    libsqlite3-dev libbz2-dev libssl-dev less htop liblzma-dev && apt clean && rm -rf /var/lib/apt/lists/*
+ARG ASCEND_BASE=/usr/local/Ascend
 
-ENV LD_LIBRARY_PATH=/usr/local/python3.7.5/lib: \
-    PATH=/usr/local/python3.7.5/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+SHELL ["/bin/bash","-c"]
 
-# 安装python和pip
-RUN umask 0022  && \
-    curl -k https://repo.huaweicloud.com/python/3.7.5/Python-3.7.5.tar.xz -o Python-3.7.5.tar.xz && \
-    tar -xf Python-3.7.5.tar.xz && cd Python-3.7.5 && ./configure --prefix=/usr/local/python3.7.5 --enable-shared && \
-    make -j 20 && make install && \
-    ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python3 && \
-    ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python && \
-    ln -sf /usr/local/python3.7.5/bin/pip3 /usr/bin/pip3 && \
-    ln -sf /usr/local/python3.7.5/bin/pip3 /usr/bin/pip && \
-    cd .. && \
-    rm -rf Python* && \
-    mkdir -p ~/.pip  && \
-    echo '[global] \n\
-    index-url=http://mirrors.aliyun.com/pypi/simple/\n\
-    trusted-host=mirrors.aliyun.com' >> ~/.pip/pip.conf
+ENV LD_LIBRARY_PATH=/usr/local/python3.9.2/lib: \
+    PATH=/usr/local/python3.9.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # HwHiAiUser
 RUN groupadd  HwHiAiUser -g 1000 && \
@@ -47,12 +21,14 @@ RUN groupadd  HwHiAiUser -g 1000 && \
 # python包
 RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     umask 0022  && \
-    mkdir -p /job/code /home/HwHiAiUser/samples/scripts && \
-    chown HwHiAiUser:HwHiAiUser -R /job /home/HwHiAiUser/samples && \
+    mkdir -p /job/code /home/HwHiAiUser/samples/scripts  && \
+    mkdir -p /home/HwHiAiUser/distributed /home/HwHiAiUser/flops /home/HwHiAiUser/ais /home/HwHiAiUser/hccl && \
+    chown HwHiAiUser:HwHiAiUser -R /job /home/HwHiAiUser && \
     pip3 install pip -U && \
     pip3 install -r /tmp/requirements.txt && \
     pip3 install /tmp/mindx_elastic*.whl && \
     rm -rf /root/.cache/pip
+
 
 # 环境变量
 ENV GLOG_v=2
@@ -75,8 +51,6 @@ $LD_LIBRARY_PATH
 # CANN包
 RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     umask 0022  && \
-    bash /tmp/Ascend-cann-toolkit*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
-    bash /tmp/Ascend-cann-kernels-910_*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
     bash /tmp/Ascend-cann-kernels-910b_*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
     bash /tmp/Ascend-mindx-toolbox*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
 # TRAIN_FRAMEWORK安装
@@ -100,7 +74,7 @@ COPY --chown=HwHiAiUser:HwHiAiUser vpc_resnet50_imagenet_classification /home/Hw
 COPY --chown=HwHiAiUser:HwHiAiUser test_model.sh /home/HwHiAiUser/samples/scripts/test_model.sh
 COPY --chown=HwHiAiUser:HwHiAiUser hccl.json /user/serverid/devindex/config/hccl.json 
 COPY --chown=HwHiAiUser:HwHiAiUser run_ais.py /home/HwHiAiUser/samples/scripts/run_ais.py
-COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.2 /home/HwHiAiUser/samples/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.2
-COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.2 /home/HwHiAiUser/samples/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.2
+COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.3 /home/HwHiAiUser/samples/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.3
+COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.3 /home/HwHiAiUser/samples/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.3
 
 WORKDIR /home/HwHiAiUser/

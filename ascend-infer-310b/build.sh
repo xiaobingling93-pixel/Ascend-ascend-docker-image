@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version=23.0.0
+version=24.0.RC1
 
 cp -r /usr1/package/Ascend-cann-nnrt_*_linux-aarch64.run .
 cp -r /usr1/package/Ascend-cann-toolkit_*_linux-aarch64.run .

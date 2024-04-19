@@ -1,6 +1,6 @@
 # mindspore-modelzoo介绍
 
-镜像基于ubuntu18.04基础镜像构建，包含训练、转换、推理和有效算力验收功能。镜像中包含MindSpore框架、python3.7.5、toolkit和toolbox软件包，并且内置了用于集群训练的resnet50模型和用于有效算力验收的resnet50、bert-large模型。
+镜像基于ubuntu20.04基础镜像构建，包含训练、转换、推理和有效算力验收功能。镜像中包含MindSpore框架、python3.9.2、toolkit和toolbox软件包，并且内置了用于集群训练的resnet50模型和用于有效算力验收的resnet50、bert-large模型。
 
 ## 集群训练
 

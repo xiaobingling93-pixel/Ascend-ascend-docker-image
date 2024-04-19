@@ -21,12 +21,12 @@ if [ $cmd_ret -eq 0 ]; then
     echo "the docker is not running, restart docker"
     systemctl restart docker
   fi
-  images_stat=`echo $docker_stat |grep "ascendhub.huawei.com/public-ascendhub/testcases" |grep "23.0.0-ubuntu18.04"`
+  images_stat=`echo $docker_stat |grep "ascendhub.huawei.com/public-ascendhub/testcases" |grep "24.0.RC1-ubuntu20.04"`
   if [ "$images_stat" ]; then
     echo "image exist"
   else
     echo "import testcases image"
-    docker import testcases.tar ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04
+    docker import testcases.tar ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu20.04
   fi
   docker stop $(docker ps -aq)
   ps -ef |grep -i python |grep -i [name] |grep -v grep |awk '{print $2}' |xargs -t -I {} kill -9 {}
@@ -43,8 +43,8 @@ if [ $cmd_ret -eq 0 ]; then
   rank_table=`pwd`/config/hccl.json
   mount_davincis="--device=/dev/davinci_manager --device=/dev/devmm_svm --device=/dev/hisi_hdc"
   for i in $get_davincis;do mount_davincis="$mount_davincis --device=$i";done
-  ais_bert_log_dir=/home/HwHiAiUser/samples/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-${arch}-1.0-r2.2/log
-  ais_resnet_log_dir=/home/HwHiAiUser/samples/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-${arch}-1.0-r2.2/log
+  ais_bert_log_dir=/home/HwHiAiUser/samples/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-${arch}-1.0-r2.3/log
+  ais_resnet_log_dir=/home/HwHiAiUser/samples/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-${arch}-1.0-r2.3/log
   data_path="-v $rank_table:/home/HwHiAiUser/$(basename "$rank_table") -v $TRAIN_DATA_PATH:/home/HwHiAiUser/$(basename "$TRAIN_DATA_PATH") -v $EVAL_DATA_PATH:/home/HwHiAiUser/$(basename "$EVAL_DATA_PATH")"
   if [ $TYPE == "bert-large" ]; then
     data_path="$data_path -v $PRETRAIN_MODEL_PATH:/home/HwHiAiUser/$(basename "$PRETRAIN_MODEL_PATH")"
@@ -60,7 +60,7 @@ if [ $cmd_ret -eq 0 ]; then
   -v /home/hwtest:/home/hwtest \
   -v /root/ais_log/bert_log:${ais_bert_log_dir} \
   -v /root/ais_log/resnet_log:${ais_resnet_log_dir} \
-  ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04 /bin/bash \
+  ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu20.04 /bin/bash \
   -c "bash /home/hwtest/ais/ais_bench.sh"
 else
   #  docker命令不存在，当前在容器内
@@ -70,8 +70,10 @@ else
     parameter="$parameter /home/HwHiAiUser/$(basename "$PRETRAIN_MODEL_PATH")"
   fi
   source /usr/local/Ascend/ascend-toolkit/set_env.sh
-  export LD_LIBRARY_PATH=/usr/local/python3.7.5/lib:$LD_LIBRARY_PATH
-  export PATH=/usr/local/python3.7.5/bin:$PATH
+  export LD_LIBRARY_PATH=/usr/local/python3.9.2/lib:$LD_LIBRARY_PATH
+  export PATH=/usr/local/python3.9.2/bin:$PATH
   export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH
+  sed -i "s/python3.7/python3.9/g" /home/HwHiAiUser/samples/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-$(arch)-1.0-r2.3/code/config/config.sh
+  sed -i "s/python3.7/python3.9/g" /home/HwHiAiUser/samples/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-$(arch)-1.0-r2.3/code/config/config.sh
   python3 run_ais.py  $parameter  > /home/hwtest/ais/ais_bench.log 2>&1
 fi

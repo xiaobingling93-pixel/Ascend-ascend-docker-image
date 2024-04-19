@@ -1,6 +1,6 @@
 ARG BASE_VERSION
 ARG BASE=ascend-toolkit:$BASE_VERSION
-FROM ubuntu:18.04 as buildtemp
+FROM ubuntu:20.04 as buildtemp
 COPY . /tmp
 
 FROM $BASE
@@ -24,8 +24,9 @@ RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
         apt-get update; \
         apt-get install --no-install-recommends libnuma1 libgomp1 libxml2 -y; \
         rm -rf /var/lib/apt/lists/*; \
-    elif [ "$OS_ID" == "centos" ]; then \
-        yum makecache fast; \
+    elif [ "$OS_ID" == "openEuler" ]; then \
+        sed -i "s/python3/python3.7/g" /usr/bin/yum; \
+        yum makecache; \
         yum -y install numactl-libs libgomp libxml2; \
         yum clean all; \
     fi && \

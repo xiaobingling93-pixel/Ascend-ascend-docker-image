@@ -1,6 +1,6 @@
 ARG BASE_VERSION
 ARG BASE=ascend-toolkit:$BASE_VERSION
-FROM ubuntu:18.04 as buildtemp
+FROM ubuntu:20.04 as buildtemp
 COPY . /tmp
 FROM $BASE
 
@@ -26,7 +26,10 @@ RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     ./$TFPLUGIN_PKG --quiet --install --install-for-all --force && \
     rm -f ./$TFPLUGIN_PKG && \
     pip3 install $TF_PKG && \
-    pip3 install -U protobuf==3.19.0 && \
+    pip3 install -U scipy==1.9.0 && \
+    pip3 install -U grpcio-tools==1.48.2 && \
+    pip3 install -U contourpy==1.1.1 && \
+    pip3 install -U matplotlib==3.5.3 && \
     rm -rf /root/.cache/pip && \
     rm -rf $ASCEND_BASE/driver && \
     rm -f /etc/ascend_install.info

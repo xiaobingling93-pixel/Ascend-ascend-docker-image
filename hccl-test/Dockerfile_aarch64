@@ -18,7 +18,7 @@ RUN umask 0022 && \
     cd $TOOLKIT_PATH/tools/hccl_test && \
     make MPI_HOME=/usr/local/mpich-3.2.1 ASCEND_DIR=$TOOLKIT_PATH/aarch64-linux
 
-ENV PATH=$PATH:/usr/local/mpich-3.2.1/bin:$TOOLKIT_PATH/tools/hccl_test/bin
+ENV PATH=/usr/local/mpich-3.2.1/bin:$TOOLKIT_PATH/tools/hccl_test/bin:$PATH
 
 # 安装ssh 
 RUN apt-get update && \
