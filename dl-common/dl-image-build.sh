@@ -19,30 +19,35 @@ root_dir=$(pwd $0)
 arch=$(arch)
 
 build_resilience_controller(){
+  cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-resilience-controller_${version}_linux-${arch}.zip -d resilience-controller
   cd ${root_dir}/resilience-controller || exit 1
   docker build --no-cache -t resilience-controller:v${version} ./
 }
 
 build_hccl_controller(){
+  cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-hccl-controller_${version}_linux-${arch}.zip -d hccl-controller
   cd ${root_dir}/hccl-controller || exit 1
   docker build --no-cache -t hccl-controller:v${version} ./
 }
 
 build_noded(){
+  cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-noded_${version}_linux-${arch}.zip -d ascend-noded
   cd ${root_dir}/ascend-noded || exit 1
   docker build --no-cache -t noded:v${version} ./
 }
 
 build_ascend_operator(){
+  cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-ascend-operator_${version}_linux-${arch}.zip -d ascend-operator
   cd ${root_dir}/ascend-operator || exit 1
   docker build --no-cache -t ascend-operator:v${version} ./
 }
 
 build_device_plugin(){
+  cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-device-plugin_${version}_linux-${arch}.zip -d ascend-device-plugin
   cd ${root_dir}/ascend-device-plugin || exit 1
   cp ${root_dir}/Dockerfile-dp-common ./
@@ -50,6 +55,7 @@ build_device_plugin(){
 }
 
 build_npu_exporter(){
+  cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-npu-exporter_${version}_linux-${arch}.zip -d ascend-npu-exporter
   cd ${root_dir}/ascend-npu-exporter || exit 1
   cp ${root_dir}/Dockerfile-exporter-common ./
@@ -69,6 +75,7 @@ build_volcano_v1.4(){
 }
 
 build_volcano(){
+  cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-volcano_${version}_linux-${arch}.zip -d ascend-volcano-plugin
   build_volcano_v1.7
   build_volcano_v1.4
