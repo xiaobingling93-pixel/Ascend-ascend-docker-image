@@ -31,7 +31,7 @@ push_resilience_controller(){
 
 push_hccl_controller(){
   docker tag hccl-controller:v${version} ${repository}/hccl-controller:v${version}-${ARCH}
-  docker push hccl-controller:v${version} ${repository}/hccl-controller:v${version}-${ARCH}
+  docker push ${repository}/hccl-controller:v${version}-${ARCH}
 }
 
 push_noded(){
