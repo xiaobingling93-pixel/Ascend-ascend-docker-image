@@ -36,7 +36,7 @@ push_hccl_controller(){
 
 push_noded(){
   docker tag noded:v${version} ${repository}/noded:v${version}-${ARCH}
-  docker push noded:v${version} ${repository}/noded:v${version}-${ARCH}
+  docker push ${repository}/noded:v${version}-${ARCH}
 }
 
 push_ascend_operator(){
