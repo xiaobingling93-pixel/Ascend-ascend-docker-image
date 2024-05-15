@@ -45,7 +45,7 @@ RUN wget https://github.com/facebookresearch/faiss/archive/v1.7.4.tar.gz --no-ch
     cd .. && cmake -B build . -DFAISS_ENABLE_GPU=OFF -DPython_EXECUTABLE=/usr/bin/python3 -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${FAISS_INSTALL_PATH} && \
     make -C build -j faiss && \
     make -C build -j swigfaiss && \
-    cd build/faiss/python && python3 setup.py install --install-lib=/usr/local/python3.9/dist-packages && \
+    cd build/faiss/python && python3 setup.py install --install-lib=/usr/local/lib/python3.9/dist-packages && \
     cd ../../.. && make -C build install && cp ./build/faiss/python/libfaiss_python_callbacks.so ${FAISS_INSTALL_PATH}/lib
 
 RUN bash Ascend-mindxsdk-mxindex_*.run --quiet --install --install-path=/usr/local/Ascend --platform=${PLATFORM}
@@ -65,7 +65,7 @@ RUN cp -r driver /usr/local/Ascend/driver && \
     g++ -std=c++11 -DFINTEGER=int -fopenmp -I/usr/local/include -I${ASCEND_INSTALL_PATH}/acllib/include -I${ASCEND_INSTALL_PATH}/runtime/include -I${DRIVER_INSTALL_PATH}/driver/kernel/inc/driver -I${DRIVER_INSTALL_PATH}/driver/kernel/libc_sec/include -fPIC -fstack-protector-all -Wall -Wreturn-type -D_FORTIFY_SOURCE=2 -g -O3 -Wall -Wextra -I${PYTHON_HEADER} -I/usr/local/lib/python3.9/dist-packages/numpy/core/include -I${FAISS_INSTALL_PATH}/include -I${MXINDEX_INSTALL_PATH}/include -c swig_ascendfaiss.cpp -o swig_ascendfaiss.o && \
     g++ -std=c++11 -shared -fopenmp -L${ASCEND_INSTALL_PATH}/acllib/lib64 -L${ASCEND_INSTALL_PATH}/runtime/lib64 -L${DRIVER_INSTALL_PATH}/driver/lib64 -L${DRIVER_INSTALL_PATH}/driver/lib64/common -L${DRIVER_INSTALL_PATH}/driver/lib64/driver -L${FAISS_INSTALL_PATH}/lib -L${MXINDEX_INSTALL_PATH}/lib -Wl,-rpath-link=${ASCEND_INSTALL_PATH}/acllib/lib64:${ASCEND_INSTALL_PATH}/runtime/lib64:${DRIVER_INSTALL_PATH}/driver/lib64:${DRIVER_INSTALL_PATH}/driver/lib64/common:${DRIVER_INSTALL_PATH}/driver/lib64/driver -L/usr/local/lib -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -s -o _swig_ascendfaiss.so swig_ascendfaiss.o -L.. -lascendfaiss -lfaiss -lascend_hal -lacl_retr -lascendcl -lc_sec -lopenblas && \
     python3.9 setup.py build && \
-    python3.9 setup.py install --install-lib=/usr/local/python3.9/dist-packages
+    python3.9 setup.py install --install-lib=/usr/local/lib/python3.9/dist-packages
 ENV LD_LIBRARY_PATH=/usr/local/Ascend/mxIndex/lib:/usr/local/faiss/faiss1.7.4/lib:/opt/OpenBLAS/lib:$LD_LIBRARY_PATH
 
 RUN rm -rf ./* && rm -rf /usr/local/Ascend/driver
