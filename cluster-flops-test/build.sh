@@ -1,6 +1,6 @@
 #!/bin/bash
 
-arch=$(uname -m)
+arch=$(uname -m
 
 cp -rf /usr1/package/Ascend-cann-nnrt*-$(arch).run .
 cp -rf /usr1/package/Ascend-mindx-toolbox*-$(arch).run .
@@ -18,7 +18,7 @@ if [ $have_toolbox == 0 ]; then
 fi
 
 if [ $arch == "x86_64" ];then
-    DOCKER_BUILDKIT=1 docker build -t cluster-flops-test:ubuntu18.04-x64 --build-arg NNRT_PKG=Ascend-cann-nnrt*-$(arch).run --build-arg TOOLBOX_PKG=Ascend-mindx-toolbox*-$(arch).run .|| exit 1
+    DOCKER_BUILDKIT=1 docker build -t cluster-flops-test:ubuntu20.04-x64 --build-arg NNRT_PKG=Ascend-cann-nnrt*-$(arch).run --build-arg TOOLBOX_PKG=Ascend-mindx-toolbox*-$(arch).run .|| exit 1
 else
-    DOCKER_BUILDKIT=1 docker build -t cluster-flops-test:ubuntu18.04-arm64 --build-arg NNRT_PKG=Ascend-cann-nnrt*-$(arch).run --build-arg TOOLBOX_PKG=Ascend-mindx-toolbox*-$(arch).run .|| exit 1
+    DOCKER_BUILDKIT=1 docker build -t cluster-flops-test:ubuntu20.04-arm64 --build-arg NNRT_PKG=Ascend-cann-nnrt*-$(arch).run --build-arg TOOLBOX_PKG=Ascend-mindx-toolbox*-$(arch).run .|| exit 1
 fi

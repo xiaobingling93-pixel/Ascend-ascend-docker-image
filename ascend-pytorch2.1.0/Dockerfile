@@ -1,9 +1,9 @@
-FROM ubuntu:18.04 as buildtemp
+FROM ubuntu:20.04 as buildtemp
 
 WORKDIR /tmp
 COPY . ./
 
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 WORKDIR /tmp
 

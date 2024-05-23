@@ -22,7 +22,7 @@ pandas
 pycocotools==2.0.6 
 tables 
 mmcv==1.7.0 
-lxml==4.5.2 
+lxml
 easydict==1.9 
 mindinsight 
 scikit-learn==0.24.1 

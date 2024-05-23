@@ -1,6 +1,6 @@
 # testcases介绍
 
-1. 镜像基于ubuntu18.04基础镜像构建，包含训练、集合通信测试、物理算力测试和有效算力验收功能。镜像中包含MindSpore框架、pytorch1.11.0、python3.7.5、toolkit和toolbox软件包，并且内置了用于集群训练的GPT3模型和用于有效算力验收的resnet50、bert-large模型。
+1. 镜像基于ubuntu20.04基础镜像构建，包含训练、集合通信测试、物理算力测试和有效算力验收功能。镜像中包含MindSpore框架、pytorch1.11.0、python3.9.2、toolkit和toolbox软件包，并且内置了用于集群训练的GPT3模型和用于有效算力验收的resnet50、bert-large模型。
 2. 创建config目录，将node_rank、hostfile和hccl_tool.py放置该目录下：
 ```
     mkdir -p /home/hwtest/config
@@ -19,11 +19,12 @@
    source test_model.sh all & 
 ```
 6. 镜像支持Atlas 900 A2 PoD，Atlas 800T A2和Atlas 200T A2 Box16形态产品。
-7. 镜像内软件版本，配套23.0.0的驱动固件。
+7. 镜像内软件版本，配套24.0.RC1的驱动固件。
 
-| 镜像版本   | CANN版本 | 框架版本                          | toolbox版本 | 变更项 |
-|--------|--------|-------------------------------|-----------|-----|
-| 23.0.0 | 7.0.0  | MindSpore 2.2.10,Torch 1.11.0 | 5.0.0     |     |
+| 镜像版本     | CANN版本  | 框架版本                          | toolbox版本 | 变更项 |
+|----------|---------|-------------------------------|-----------|-----|
+| 24.0.RC1 | 8.0.RC1 | MindSpore 2.3.0,Torch 1.11.0  | 6.0.RC1   |     |
+| 23.0.0   | 7.0.0   | MindSpore 2.2.10,Torch 1.11.0 | 5.0.0     |     |
 
 8. 确保物理机的HwHiAiUser的id为1000，和镜像里的HwHiAiUser保持一致。
 ## hccl-test集合通信

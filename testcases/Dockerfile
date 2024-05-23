@@ -1,46 +1,18 @@
-# syntax = docker/dockerfile:experimental
-FROM ubuntu:18.04 as buildtemp
+ARG BASE_VERSION
+ARG BASE=ascend-toolkit:$BASE_VERSION
+FROM ubuntu:20.04 as buildtemp
+COPY . /tmp
+
+FROM $BASE
 
 WORKDIR /tmp
-COPY . ./
 
-FROM ubuntu:18.04
-# 系统包,增加libfreetype6-dev pkg-config libpng-dev，否则安装matplotlib报错
-RUN echo "deb [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic main restricted universe multiverse\n\
-    deb-src [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic main restricted universe multiverse\n\
-    deb [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-updates main restricted universe multiverse\n\
-    deb-src [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-updates main restricted universe multiverse\n\
-    deb [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-backports main restricted universe multiverse\n\
-    deb-src [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-backports main restricted universe multiverse\n\
-    deb [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-security main restricted universe multiverse\n\
-    deb-src [trusted=yes] https://repo.huaweicloud.com/ubuntu/ bionic-security main restricted universe multiverse\n" > /etc/apt/sources.list && \
-    apt-get -o "Acquire::https::Verify-Peer=false" update && \
-    apt-get -o "Acquire::https::Verify-Peer=false" install -y --no-install-recommends ca-certificates && \
-    apt-get -o "Acquire::https::Verify-Peer=false" install -y --no-install-recommends wget vim sudo openssl \
-    libnuma1 curl g++ libfreetype6-dev pkg-config libpng-dev unzip libblas3 liblapack3 liblapack-dev libblas-dev \
-    gfortran libhdf5-dev libffi-dev libicu60 libxml2 2to3 python3-lib2to3 python3-toolz libgl1-mesa-glx \
-    libsqlite3-dev libbz2-dev libssl-dev less htop liblzma-dev make zlib1g zlib1g-dev iproute2 \
-    bc gcc xz-utils libopenblas-dev libgmpxx4ldbl pciutils net-tools git cython3 python3-h5py && apt clean && rm -rf /var/lib/apt/lists/*
+ARG ASCEND_BASE=/usr/local/Ascend
 
-ENV LD_LIBRARY_PATH=/usr/local/python3.7.5/lib: \
-    PATH=/usr/local/python3.7.5/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+SHELL ["/bin/bash","-c"]
 
-# 安装python和pip
-RUN umask 0022  && \
-    curl -k https://repo.huaweicloud.com/python/3.7.5/Python-3.7.5.tar.xz -o Python-3.7.5.tar.xz && \
-    tar -xf Python-3.7.5.tar.xz && cd Python-3.7.5 && ./configure --prefix=/usr/local/python3.7.5 --enable-loadable-sqlite-extensions --enable-shared && \
-    make && make install && \
-    ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python3 && \
-    ln -sf /usr/local/python3.7.5/bin/python3 /usr/bin/python && \
-    ln -sf /usr/local/python3.7.5/bin/pip3 /usr/bin/pip3 && \
-    ln -sf /usr/local/python3.7.5/bin/pip3 /usr/bin/pip && \
-    cd .. && \
-    rm -rf Python* && \
-    mkdir -p ~/.pip  && \
-    echo '[global] \n\
-    index-url=http://mirrors.aliyun.com/pypi/simple/\n\
-    trusted-host=mirrors.aliyun.com' >> ~/.pip/pip.conf && \
-    pip3 install pip -U
+ENV LD_LIBRARY_PATH=/usr/local/python3.9.2/lib: \
+    PATH=/usr/local/python3.9.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # HwHiAiUser
 RUN groupadd  HwHiAiUser -g 1000 && \
@@ -85,9 +57,6 @@ $LD_LIBRARY_PATH
 RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     umask 0022  && \
     chmod +x /tmp/*.run && \
-    bash /tmp/Ascend-cann-toolkit*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
-    bash /tmp/Ascend-cann-kernels-910b_*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
-    bash /tmp/Ascend-cann-kernels-910_*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
     bash /tmp/Ascend-mindx-toolbox*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
 # TRAIN_FRAMEWORK安装
     pip3 install /tmp/mindspore*.whl && \
@@ -121,10 +90,10 @@ RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     cd /home/HwHiAiUser/distributed/Megatron-LM/megatron_npu && \
     pip3 install -e . && \
     pip3 install -r requirements.txt && \
-    pip3 install psutil && \
+    pip3 install psutil
 
 # 清理工作
-    rm -rf /tmp/*  && \
+RUN rm -rf /tmp/*  && \
     rm -rf /root/.cache/pip
 
 USER HwHiAiUser
@@ -133,8 +102,7 @@ COPY --chown=HwHiAiUser:HwHiAiUser Open_Source_Software_Notice.txt /home/HwHiAiU
 COPY --chown=HwHiAiUser:HwHiAiUser hccl_run.sh /home/HwHiAiUser/hccl/hccl_run.sh
 COPY --chown=HwHiAiUser:HwHiAiUser run_ais.py /home/HwHiAiUser/ais/run_ais.py
 COPY --chown=HwHiAiUser:HwHiAiUser flops_test.py /home/HwHiAiUser/flops/flops_test.py
-COPY --chown=HwHiAiUser:HwHiAiUser Megatron-LM /home/HwHiAiUser/distributed/Megatron-LM
-COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.2 /home/HwHiAiUser/samples/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.2
-COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.2 /home/HwHiAiUser/samples/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.2
+COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.3 /home/HwHiAiUser/samples/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.3
+COPY --chown=HwHiAiUser:HwHiAiUser train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.3 /home/HwHiAiUser/samples/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.3
 
 WORKDIR /home/HwHiAiUser/

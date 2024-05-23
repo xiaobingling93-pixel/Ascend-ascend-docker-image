@@ -1,7 +1,7 @@
 ARG BASE_VERSION
 ARG BASE=ascendbase-toolkit:$BASE_VERSION
 
-FROM ubuntu:18.04 as buildtemp
+FROM ubuntu:20.04 as buildtemp
 COPY . /tmp
 
 FROM $BASE

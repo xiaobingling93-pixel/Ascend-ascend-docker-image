@@ -14,12 +14,12 @@ arr=("A1" "A2")
 
 if [ "$arch" == "x86_64" ]; then
   for element in "${arr[@]}"; do
-    DOCKER_BUILDKIT=1 docker build -t ascend-mindspore:"$element"-centos7-x64 --no-cache --build-arg BASE_VERSION="$element"-centos7-x64 . || exit 1
-    DOCKER_BUILDKIT=1 docker build -t ascend-mindspore:"$element"-ubuntu18.04-x64 --no-cache --build-arg BASE_VERSION="$element"-ubuntu18.04-x64 . || exit 1
+    DOCKER_BUILDKIT=1 docker build -t ascend-mindspore:"$element"-openeuler20.03-x64 --no-cache --build-arg BASE_VERSION="$element"-openeuler20.03-x64 . || exit 1
+    DOCKER_BUILDKIT=1 docker build -t ascend-mindspore:"$element"-ubuntu20.04-x64 --no-cache --build-arg BASE_VERSION="$element"-ubuntu20.04-x64 . || exit 1
   done
 else
   for element in "${arr[@]}"; do
-    DOCKER_BUILDKIT=1 docker build -t ascend-mindspore:"$element"-centos7-arm64 --no-cache --build-arg BASE_VERSION="$element"-centos7-arm64 . || exit 1
-    DOCKER_BUILDKIT=1 docker build -t ascend-mindspore:"$element"-ubuntu18.04-arm64 --no-cache --build-arg BASE_VERSION="$element"-ubuntu18.04-arm64 . || exit 1
+    DOCKER_BUILDKIT=1 docker build -t ascend-mindspore:"$element"-openeuler20.03-arm64 --no-cache --build-arg BASE_VERSION="$element"-openeuler20.03-arm64 . || exit 1
+    DOCKER_BUILDKIT=1 docker build -t ascend-mindspore:"$element"-ubuntu20.04-arm64 --no-cache --build-arg BASE_VERSION="$element"-ubuntu20.04-arm64 . || exit 1
   done
 fi

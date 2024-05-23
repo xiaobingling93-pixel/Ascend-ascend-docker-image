@@ -1,8 +1,8 @@
 UserName=HwHiAiUser
 UserGroup=HwHiAiUser
-Driver_Install_Type=full
+Driver_Install_Type=run
 Driver_Install_Path_Param=/usr/local/Ascend
 Driver_Install_For_All=no
 Driver_Install_Mode=normal
-Firmware_Install_Type=full
+Firmware_Install_Type=run
 Firmware_Install_Path_Param=/usr/local/Ascend

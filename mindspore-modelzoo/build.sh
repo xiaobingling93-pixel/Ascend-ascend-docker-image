@@ -6,16 +6,15 @@ rm -rf mindspore*.whl mindx_elastic*.whl Ascend*.run train_huawei_train_mindspor
 
 #准备依赖包
 cp -rf /usr1/package/mindspore-*linux_"$(arch)".whl .
-cp -rf /usr1/package/mindx_elastic-0.0.1-py37-none-linux_"$(arch)".whl .
+cp -rf /usr1/package/mindx_elastic*"$arch".whl .
 cp -rf /usr1/package/Ascend-mindx-toolbox*-"$(arch)".run .
-cp -rf /usr1/package/Ascend-cann-toolkit_*-"$(arch)".run .
-cp -rf /usr1/package/Ascend-cann-kernels-910*.run .
+cp -rf /usr1/package/Ascend-cann-kernels-910b*.run .
 if [ "$arch" == "x86_64" ]; then
-    cp -rf /usr1/package/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.2 . || exit 1
-    cp -rf /usr1/package/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.2 . || exit 1
+    cp -rf /usr1/package/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-x86_64-1.0-r2.3 . || exit 1
+    cp -rf /usr1/package/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-x86_64-1.0-r2.3 . || exit 1
 else
-    cp -rf /usr1/package/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-aarch64-1.0-r2.2 . || exit 1
-    cp -rf /usr1/package/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-aarch64-1.0-r2.2 . || exit 1
+    cp -rf /usr1/package/train_huawei_train_mindspore_bert-Ais-Benchmark-Stubs-aarch64-1.0-r2.3 . || exit 1
+    cp -rf /usr1/package/train_huawei_train_mindspore_resnet-Ais-Benchmark-Stubs-aarch64-1.0-r2.3 . || exit 1
 fi
 cp -rf /usr1/package/run_ais.py . || exit 1
 
@@ -40,19 +39,14 @@ if [ "$have_toolbox" == 0 ]; then
     echo "please put toolbox package here"
     exit 1
 fi
-have_toolkit=$(find Ascend-cann-toolkit*"$arch".run 2>/dev/null | wc -l)
-if [ "$have_toolkit" == 0 ]; then
-    echo "please put toolkit run package here"
-    exit 1
-fi
-have_kernels=$(find Ascend-cann-kernels-910*.run 2>/dev/null | wc -l)
-if [ "$have_kernels" != 2 ]; then
+have_kernels=$(find Ascend-cann-kernels-910b*.run 2>/dev/null | wc -l)
+if [ "$have_kernels" != 1 ]; then
     echo "please put kernels run package here"
     exit 1
 fi
 
 if [ "$arch" == "x86_64" ]; then
-    DOCKER_BUILDKIT=1 docker build . -t mindspore-modelzoo:ubuntu18.04-x64
+    DOCKER_BUILDKIT=1 docker build . -t mindspore-modelzoo:ubuntu20.04-x64 --build-arg BASE_VERSION=A1-ubuntu20.04-x64
 else
-    DOCKER_BUILDKIT=1 docker build . -f Dockerfile_aarch64 -t mindspore-modelzoo:ubuntu18.04-arm64
+    DOCKER_BUILDKIT=1 docker build . -f Dockerfile_aarch64 -t mindspore-modelzoo:ubuntu20.04-arm64 --build-arg BASE_VERSION=A1-ubuntu20.04-arm64
 fi

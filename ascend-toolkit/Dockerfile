@@ -1,7 +1,7 @@
 ARG BASE_VERSION
 ARG BASE=ascendbase-toolkit:$BASE_VERSION
 
-FROM ubuntu:18.04 as buildtemp
+FROM ubuntu:20.04 as buildtemp
 COPY . /tmp
 
 FROM $BASE
@@ -34,6 +34,8 @@ RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     else \
         CHIPOPTION=""; \
     fi && \
+    chown root:root /usr && \
+    chown root:root /usr/local && \
     chmod +x $TOOLKIT_PKG && \
     ./$TOOLKIT_PKG --quiet --install --install-path=$ASCEND_BASE --install-for-all $CHIPOPTION && \
     bash /tmp/Ascend-cann-kernels-*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
