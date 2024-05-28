@@ -1,5 +1,44 @@
 #!/bin/bash
 
+check_hccl_process(){
+  while true
+  do
+    sleep 3
+    ps -ef | grep -v grep | grep mpi
+    if [[ $? -eq 0 ]];then
+      break
+    fi
+  done
+  while true
+  do
+    sleep 3
+    ps -ef | grep -v grep | grep -w reduce_test
+    if [[ $? -eq 0 ]];then
+       break
+    fi
+  done
+  while true
+  do
+    sleep 5
+    ps -ef | grep -v grep | grep mpi
+    if [[ $? -ne 0 ]];then
+      sleep 2
+       exit 0
+    fi
+  done
+}
+
+check_process_end(){
+  while true
+  do
+    sleep 5
+    cat /home/hwtest/hccl/hccl_test.log | grep "Connection refused" ||  cat /home/hwtest/hccl/hccl_test.log | grep "hccl_test_end"
+    if [[ $? -eq 0 ]];then
+      exit 1
+    fi
+  done
+}
+
 current_stat=`docker --help`
 cmd_ret=$?
 if [ $cmd_ret -eq 0 ]; then
@@ -54,8 +93,11 @@ else
           ssh-keyscan -p 33333 -t rsa $ip_address >> /root/.ssh/known_hosts 2>/dev/null
       done
       chmod +x hccl_run.sh
-      ./hccl_run.sh > /home/hwtest/hccl/hccl_test.log 2>&1
+      echo " " >> hccl_run.sh
+      echo "echo --------------hccl_test_end---------------" >> hccl_run.sh
+      ./hccl_run.sh > /home/hwtest/hccl/hccl_test.log 2>&1 &
+      check_process_end
   else
-      sleep 30
+      check_hccl_process
   fi
 fi

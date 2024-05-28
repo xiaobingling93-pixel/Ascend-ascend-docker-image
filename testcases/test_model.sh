@@ -9,7 +9,7 @@ flops_dir="flops"
 ais_dir="ais"
 distributed_dir="distributed"
 
-if [ "$#" -eq 1 ]; then
+if [ "$#" -le 1 ]; then
   if [[ "$param" == "all" ]]; then
     bash "$hccl_dir/hccl_test.sh" >/dev/null 2>&1
     bash "$flops_dir/flops_test.sh" >/dev/null 2>&1
