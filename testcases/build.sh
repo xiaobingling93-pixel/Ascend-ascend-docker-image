@@ -57,7 +57,6 @@ get_megatron
 
 echo "start build"
 if [ $arch == "x86_64" ];then
-  exit 0
     DOCKER_BUILDKIT=1  docker build -t testcases:ubuntu20.04-x64 --build-arg BASE_VERSION=A2-ubuntu20.04-x64 .
 else
     DOCKER_BUILDKIT=1  docker build -f Dockerfile_aarch64 -t testcases:ubuntu20.04-arm64 --build-arg BASE_VERSION=A2-ubuntu20.04-arm64 .

@@ -50,7 +50,7 @@ if [ $cmd_ret -eq 0 ]; then
     data_path="$data_path -v $PRETRAIN_MODEL_PATH:/home/HwHiAiUser/$(basename "$PRETRAIN_MODEL_PATH")"
   fi
   mkdir -p ~/ais_log/resnet_log ~/ais_log/bert_log
-  chown -R HwHiAiUser:HwHiAiUser ~/ais_log/resnet_log ~/ais_log/bert_log
+  chown -R 1000:1000 ~/ais_log/resnet_log ~/ais_log/bert_log
   docker run --rm --shm-size=16g --ipc=host --net=host --name=testcases $mount_davincis $data_path \
   -v /etc/ascend_install.info:/etc/ascend_install.info \
   -v /etc/hccn.conf:/etc/hccn.conf \

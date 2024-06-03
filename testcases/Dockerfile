@@ -88,8 +88,12 @@ RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     cp -r /tmp/Megatron-LM/ /home/HwHiAiUser/distributed/Megatron-LM && \
     chown -R HwHiAiUser:HwHiAiUser /home/HwHiAiUser/distributed/Megatron-LM && \
     cd /home/HwHiAiUser/distributed/Megatron-LM/megatron_npu && \
+    mv -f /home/HwHiAiUser/distributed/Megatron-LM/megatron_npu/tests_gpt/pretrain_gpt.py /home/HwHiAiUser/distributed/Megatron-LM/ && \
     pip3 install -e . && \
     pip3 install -r requirements.txt && \
+    cd /home/HwHiAiUser/distributed/Megatron-LM/megatron/data && \
+    make && \
+    chown -R HwHiAiUser:HwHiAiUser /home/HwHiAiUser/distributed && \
     pip3 install psutil
 
 # 清理工作

@@ -1,16 +1,16 @@
 # testcases介绍
 
 1. 镜像基于ubuntu20.04基础镜像构建，包含训练、集合通信测试、物理算力测试和有效算力验收功能。镜像中包含MindSpore框架、pytorch1.11.0、python3.9.2、toolkit和toolbox软件包，并且内置了用于集群训练的GPT3模型和用于有效算力验收的resnet50、bert-large模型。
-2. 创建config目录，将node_rank、hostfile和hccl_tool.py放置该目录下：
+2. 创建config目录，将node_rank、hostfile和hccl_tools.py放置该目录下：
 ```
     mkdir -p /home/hwtest/config
-    cp node_rank hostfile hccl_tool.py /home/hwtest/config
-    chown -R HwHiAiUser:HwHiAiUser /home/hwtest/config
+    cp node_rank hostfile hccl_tools.py /home/hwtest/config
+    chown -R 1000:1000 /home/hwtest/config
 ```
 
 3. 为了成功验证，需要独占环境，脚本会杀掉其他执行中的进程，请用户注意并自行处理可能出现的问题。
 
-4. hccl_test.sh, flops_test.sh, ais_bench.sh和server_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04，
+4. hccl_test.sh, flops_test.sh, ais_bench.sh和server_train.sh中容器启动的默认镜像为ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu20.04，
 用户可根据实际情况进行修改。
 5. test_model.sh为入口脚本，放到目录/home/hwtest/下，可以接受参数all（无参数时，默认为all）、hccl-test、flops-test、distributed、ais-flops，all会将所有测试项依次执行，需要准备好所有必要的先置条件（参考后续单项测试功能介绍）；其他参数分别对应hccl集群通信验证、物理机算力测试、集群训练、有效算力验收。
 ```
@@ -26,7 +26,7 @@
 | 24.0.RC1 | 8.0.RC1 | MindSpore 2.3.0,Torch 1.11.0  | 6.0.RC1   |     |
 | 23.0.0   | 7.0.0   | MindSpore 2.2.10,Torch 1.11.0 | 5.0.0     |     |
 
-8. 确保物理机的HwHiAiUser的id为1000，和镜像里的HwHiAiUser保持一致。
+8. 确保物理机的HwHiAiUser的id为1000，和镜像里的HwHiAiUser保持一致或物理机上的驱动安装时添加--install-for-all。
 ## hccl-test集合通信
 
 1. 检查集群环境的健康状态，可使用hccn_tool工具进行检查。
@@ -54,7 +54,7 @@
     mkdir -p /home/hwtest/hccl
     cp hccl_test.sh /home/hwtest/hccl
 ```
-6. 执行`source test_model.sh hccl-test`。
+6. 执行`source test_model.sh hccl-test`(主节点最后执行)。
 7. 检查执行日志，日志位于/home/hwtest/hccl/hccl_test.log，结果如下，表示测试成功：
 <div align=center>
 <img src="image/hccl_test_result.png">
@@ -68,16 +68,16 @@
 ```
     mkdir -p /home/hwtest/flops
     cp flops_test.sh /home/hwtest/flops
-    chown -R HwHiAiUser:HwHiAiUser /home/hwtest/flops
+    chown -R 1000:1000 /home/hwtest/flops
 ```
 2. 执行`source test_model.sh flops-test`。
 3. 检查执行日志，日志位于/home/hwtest/flops/flops_test.log。
-4. 确保所有数据集和文件的属主为HwHiAiUser。
+4. 确保所有数据集和文件的属主uid为1000。
 ## 集群训练
 
 集群训练支持gpt3模型，数据集为enwiki数据集，需从物理机挂载，该模型不支持910A系列产品。
 
-1. 默认镜像：`ascendhub.huawei.com/public-ascendhub/testcases:23.0.0-ubuntu18.04`，可修改image字段来修改使用的镜像。
+1. 默认镜像：`ascendhub.huawei.com/public-ascendhub/testcases:24.0.RC1-ubuntu20.04`，可修改image字段来修改使用的镜像。
 2. 准备node_rank文件，第一行节点为master节点，格式如下：
 ```
   172.19.20.26 0 master
@@ -137,12 +137,12 @@ c. 如果集群中服务器业务IP位置和网口名称都存在不相同，则
 ```
     mkdir -p /home/hwtest/distributed
     cp server_train.sh pretrain_gpt_distributed_bf16_test.sh /home/hwtest/distributed
-    chown -R HwHiAiUser:HwHiAiUser /home/hwtest/distributed
+    chown -R 1000:1000 /home/hwtest/distributed
 ```
 4. 执行`source test_model.sh distributed`。
 5. 检查执行日志，日志位于/home/hwtest/distributed/train_auto.log，日志如下表示正常的进行训练。
 ![img.png](image/gpt3.png)
-6. 确保所有数据集和文件的属主为HwHiAiUser。
+6. 确保所有数据集和文件的属主uid为1000。
 ## 有效算力验收
 
 testcases镜像作为有效算力验收时使用的镜像，支持resnet50和bert-large模型。
@@ -161,9 +161,9 @@ testcases镜像作为有效算力验收时使用的镜像，支持resnet50和ber
 ```
     mkdir -p /home/hwtest/ais
     cp ais_bench.sh /home/hwtest/ais
-    chown -R HwHiAiUser:HwHiAiUser /home/hwtest/ais
+    chown -R 1000:1000 /home/hwtest/ais
 ```
 4. 执行`source test_model.sh ais-flops`。
 5. 执行的结果将会保存到/home/hwtest/ais目录下，resnet50为resnet.json，bert-large为bert_large.json
 5. 检查执行日志，resnet50日志位于/root/ais_log/resnet_log，bert-large日志位于/root/ais_log/bert_log。
-6. 确保所有数据集和文件的属主为HwHiAiUser，且id为1000。
+6. 确保所有数据集和文件的属主为HwHiAiUser，且id为1000或属主uid为1000同时物理机上的驱动安装时添加--install-for-all。
