@@ -166,4 +166,4 @@ testcases镜像作为有效算力验收时使用的镜像，支持resnet50和ber
 4. 执行`source test_model.sh ais-flops`。
 5. 执行的结果将会保存到/home/hwtest/ais目录下，resnet50为resnet.json，bert-large为bert_large.json
 5. 检查执行日志，resnet50日志位于/root/ais_log/resnet_log，bert-large日志位于/root/ais_log/bert_log。
-6. 确保所有数据集和文件的属主为HwHiAiUser，且id为1000或物理机上的驱动安装时添加--install-for-all。
+6. 确保所有数据集和文件的属主为HwHiAiUser，且id为1000或属主uid为1000同时物理机上的驱动安装时添加--install-for-all。
