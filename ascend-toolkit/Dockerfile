@@ -38,7 +38,7 @@ RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     chown root:root /usr/local && \
     chmod +x $TOOLKIT_PKG && \
     ./$TOOLKIT_PKG --quiet --install --install-path=$ASCEND_BASE --install-for-all $CHIPOPTION && \
-    bash /tmp/Ascend-cann-kernels-*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
+    bash /tmp/Ascend-cann-kernels-910*_*.run --install-path=/usr/local/Ascend/ --install --quiet --install-for-all && \
     rm -f $TOOLKIT_PKG
 
 # TOOLKIT环境变量

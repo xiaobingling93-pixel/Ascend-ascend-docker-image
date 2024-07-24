@@ -1,5 +1,5 @@
-version=24.0.RC1
-repository=swr.cn-east-3.myhuaweicloud.com/test-ascendhub
+version=24.0.RC3
+repository=swr.cn-east-3.myhuaweicloud.com/ascendhub-test
 
 #modelzoo
 #mindspore-modelzoo
@@ -25,28 +25,47 @@ docker manifest create ${repository}/ascend-toolkit:${version}-openeuler20.03 --
 docker manifest push ${repository}/ascend-toolkit:${version}-openeuler20.03
 
 #ascend-mindspore
-docker manifest rm ${repository}/ascend-mindspore:${version}-ubuntu20.04
-docker manifest create ${repository}/ascend-mindspore:${version}-ubuntu20.04 --amend ${repository}/ascend-mindspore:${version}-ubuntu20.04-x64 --amend ${repository}/ascend-mindspore:${version}-ubuntu20.04-arm64
-docker manifest push ${repository}/ascend-mindspore:${version}-ubuntu20.04
-docker manifest rm ${repository}/ascend-mindspore:${version}-openeuler20.03
-docker manifest create ${repository}/ascend-mindspore:${version}-openeuler20.03 --amend ${repository}/ascend-mindspore:${version}-openeuler20.03-x64 --amend ${repository}/ascend-mindspore:${version}-openeuler20.03-arm64
-docker manifest push ${repository}/ascend-mindspore:${version}-openeuler20.03
+docker manifest rm ${repository}/ascend-mindspore:${version}-A1-ubuntu20.04
+docker manifest create ${repository}/ascend-mindspore:${version}-A1-ubuntu20.04 --amend ${repository}/ascend-mindspore:${version}-A1-ubuntu20.04-x64 --amend ${repository}/ascend-mindspore:${version}-A1-ubuntu20.04-arm64
+docker manifest push ${repository}/ascend-mindspore:${version}-A1-ubuntu20.04
+docker manifest rm ${repository}/ascend-mindspore:${version}-A1-openeuler20.03
+docker manifest create ${repository}/ascend-mindspore:${version}-A1-openeuler20.03 --amend ${repository}/ascend-mindspore:${version}-A1-openeuler20.03-x64 --amend ${repository}/ascend-mindspore:${version}-A1-openeuler20.03-arm64
+docker manifest push ${repository}/ascend-mindspore:${version}-A1-openeuler20.03
+docker manifest rm ${repository}/ascend-mindspore:${version}-A2-ubuntu20.04
+docker manifest create ${repository}/ascend-mindspore:${version}-A2-ubuntu20.04 --amend ${repository}/ascend-mindspore:${version}-A2-ubuntu20.04-x64 --amend ${repository}/ascend-mindspore:${version}-A2-ubuntu20.04-arm64
+docker manifest push ${repository}/ascend-mindspore:${version}-A2-ubuntu20.04
+docker manifest rm ${repository}/ascend-mindspore:${version}-A2-openeuler20.03
+docker manifest create ${repository}/ascend-mindspore:${version}-A2-openeuler20.03 --amend ${repository}/ascend-mindspore:${version}-A2-openeuler20.03-x64 --amend ${repository}/ascend-mindspore:${version}-A2-openeuler20.03-arm64
+docker manifest push ${repository}/ascend-mindspore:${version}-A2-openeuler20.03
 
-#ascend-pytorch1.11.0
-docker manifest rm ${repository}/ascend-pytorch:${version}-1.11.0-ubuntu20.04
-docker manifest create ${repository}/ascend-pytorch:${version}-1.11.0-ubuntu20.04 --amend ${repository}/ascend-pytorch:${version}-1.11.0-ubuntu20.04-x64 --amend ${repository}/ascend-pytorch:${version}-1.11.0-ubuntu20.04-arm64
-docker manifest push ${repository}/ascend-pytorch:${version}-1.11.0-ubuntu20.04
-docker manifest rm ${repository}/ascend-pytorch:${version}-1.11.0-openeuler20.03
-docker manifest create ${repository}/ascend-pytorch:${version}-1.11.0-openeuler20.03 --amend ${repository}/ascend-pytorch:${version}-1.11.0-openeuler20.03-x64 --amend ${repository}/ascend-pytorch:${version}-1.11.0-openeuler20.03-arm64
-docker manifest push ${repository}/ascend-pytorch:${version}-1.11.0-openeuler20.03
+
+#ascend-pytorch2.1.0
+docker manifest rm ${repository}/ascend-pytorch:${version}-A1-2.1.0-ubuntu20.04
+docker manifest create ${repository}/ascend-pytorch:${version}-A1-2.1.0-ubuntu20.04 --amend ${repository}/ascend-pytorch:${version}-A1-2.1.0-ubuntu20.04-x64 --amend ${repository}/ascend-pytorch:${version}-A1-2.1.0-ubuntu20.04-arm64
+docker manifest push ${repository}/ascend-pytorch:${version}-A1-2.1.0-ubuntu20.04
+docker manifest rm ${repository}/ascend-pytorch:${version}-A1-2.1.0-openeuler20.03
+docker manifest create ${repository}/ascend-pytorch:${version}-A1-2.1.0-openeuler20.03 --amend ${repository}/ascend-pytorch:${version}-A1-2.1.0-openeuler20.03-x64 --amend ${repository}/ascend-pytorch:${version}-A1-2.1.0-openeuler20.03-arm64
+docker manifest push ${repository}/ascend-pytorch:${version}-A1-2.1.0-openeuler20.03
+docker manifest rm ${repository}/ascend-pytorch:${version}-A2-2.1.0-ubuntu20.04
+docker manifest create ${repository}/ascend-pytorch:${version}-A2-2.1.0-ubuntu20.04 --amend ${repository}/ascend-pytorch:${version}-A2-2.1.0-ubuntu20.04-x64 --amend ${repository}/ascend-pytorch:${version}-A2-2.1.0-ubuntu20.04-arm64
+docker manifest push ${repository}/ascend-pytorch:${version}-A2-2.1.0-ubuntu20.04
+docker manifest rm ${repository}/ascend-pytorch:${version}-A2-2.1.0-openeuler20.03
+docker manifest create ${repository}/ascend-pytorch:${version}-A2-2.1.0-openeuler20.03 --amend ${repository}/ascend-pytorch:${version}-A2-2.1.0-openeuler20.03-x64 --amend ${repository}/ascend-pytorch:${version}-A2-2.1.0-openeuler20.03-arm64
+docker manifest push ${repository}/ascend-pytorch:${version}-A2-2.1.0-openeuler20.03
 
 #ascend-tensorflow
-docker manifest rm ${repository}/ascend-tensorflow:${version}-ubuntu20.04
-docker manifest create ${repository}/ascend-tensorflow:${version}-ubuntu20.04 --amend ${repository}/ascend-tensorflow:${version}-ubuntu20.04-x64 --amend ${repository}/ascend-tensorflow:${version}-ubuntu20.04-arm64
-docker manifest push ${repository}/ascend-tensorflow:${version}-ubuntu20.04
-docker manifest rm ${repository}/ascend-tensorflow:${version}-openeuler20.03
-docker manifest create ${repository}/ascend-tensorflow:${version}-openeuler20.03 --amend ${repository}/ascend-tensorflow:${version}-openeuler20.03-x64 --amend ${repository}/ascend-tensorflow:${version}-openeuler20.03-arm64
-docker manifest push ${repository}/ascend-tensorflow:${version}-openeuler20.03
+docker manifest rm ${repository}/ascend-tensorflow:${version}-A1-ubuntu20.04
+docker manifest create ${repository}/ascend-tensorflow:${version}-A1-ubuntu20.04 --amend ${repository}/ascend-tensorflow:${version}-A1-ubuntu20.04-x64 --amend ${repository}/ascend-tensorflow:${version}-A1-ubuntu20.04-arm64
+docker manifest push ${repository}/ascend-tensorflow:${version}-A1-ubuntu20.04
+docker manifest rm ${repository}/ascend-tensorflow:${version}-A1-openeuler20.03
+docker manifest create ${repository}/ascend-tensorflow:${version}-A1-openeuler20.03 --amend ${repository}/ascend-tensorflow:${version}-A1-openeuler20.03-x64 --amend ${repository}/ascend-tensorflow:${version}-A1-openeuler20.03-arm64
+docker manifest push ${repository}/ascend-tensorflow:${version}-A1-openeuler20.03
+docker manifest rm ${repository}/ascend-tensorflow:${version}-A2-ubuntu20.04
+docker manifest create ${repository}/ascend-tensorflow:${version}-A2-ubuntu20.04 --amend ${repository}/ascend-tensorflow:${version}-A2-ubuntu20.04-x64 --amend ${repository}/ascend-tensorflow:${version}-A2-ubuntu20.04-arm64
+docker manifest push ${repository}/ascend-tensorflow:${version}-A2-ubuntu20.04
+docker manifest rm ${repository}/ascend-tensorflow:${version}-A2-openeuler20.03
+docker manifest create ${repository}/ascend-tensorflow:${version}-A2-openeuler20.03 --amend ${repository}/ascend-tensorflow:${version}-A2-openeuler20.03-x64 --amend ${repository}/ascend-tensorflow:${version}-A2-openeuler20.03-arm64
+docker manifest push ${repository}/ascend-tensorflow:${version}-A2-openeuler20.03
 
 #hccl-test
 docker manifest rm ${repository}/hccl-test:${version}-ubuntu20.04

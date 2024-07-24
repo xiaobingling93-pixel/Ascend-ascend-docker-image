@@ -1,5 +1,5 @@
-version=24.0.RC1
-public_repository=swr.cn-east-3.myhuaweicloud.com/test-ascendhub
+version=24.0.RC3
+public_repository=swr.cn-east-3.myhuaweicloud.com/ascendhub-test
 private_repository=swr.cn-east-3.myhuaweicloud.com/ascendhub_ly
 if [[ $2 == "public" ]]; then
     repository=${public_repository}
@@ -81,8 +81,14 @@ push_ascend_pytorch1110()
 
 push_ascend_pytorch210()
 {
+    docker tag ascend-pytorch2.1.0:A1-ubuntu20.04-${ARCH} ${repository}/ascend-pytorch:${version}-A1-2.1.0-ubuntu20.04-${ARCH}
+    docker push ${repository}/ascend-pytorch:${version}-A1-2.1.0-ubuntu20.04-${ARCH}
+    docker tag ascend-pytorch2.1.0:A1-openeuler20.03-${ARCH} ${repository}/ascend-pytorch:${version}-A1-2.1.0-openeuler20.03-${ARCH}
+    docker push ${repository}/ascend-pytorch:${version}-A1-2.1.0-openeuler20.03-${ARCH}
     docker tag ascend-pytorch2.1.0:A2-ubuntu20.04-${ARCH} ${repository}/ascend-pytorch:${version}-A2-2.1.0-ubuntu20.04-${ARCH}
     docker push ${repository}/ascend-pytorch:${version}-A2-2.1.0-ubuntu20.04-${ARCH}
+    docker tag ascend-pytorch2.1.0:A2-openeuler20.03-${ARCH} ${repository}/ascend-pytorch:${version}-A2-2.1.0-openeuler20.03-${ARCH}
+    docker push ${repository}/ascend-pytorch:${version}-A2-2.1.0-openeuler20.03-${ARCH}
 }
 
 push_ascend_tensorflow()

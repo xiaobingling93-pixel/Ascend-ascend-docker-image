@@ -25,6 +25,7 @@ RUN umask 0022  && \
     ln -sf /usr/local/python${PYVERSION}/bin/pip3 /usr/bin/pip && \
     cd .. && \
     rm -rf Python* && \
+    sed -i '$d' /etc/bashrc && \
     mkdir -p ~/.pip  && \
     echo -e '[global] \n\
     index-url=http://mirrors.aliyun.com/pypi/simple\n\

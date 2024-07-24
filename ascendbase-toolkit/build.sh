@@ -19,3 +19,5 @@ else
     cd ../openeuler20.03-arm64
     DOCKER_BUILDKIT=1  docker build -t ascendbase-toolkit:openeuler20.03"$pytag"-arm64 --build-arg PYVERSION=$PYVERSION . || exit 1
 fi
+
+

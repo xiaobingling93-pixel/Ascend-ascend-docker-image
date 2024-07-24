@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-version=6.0.RC1
+version=6.0.RC3
 root_dir=$(pwd $0)
 arch=$(arch)
 
@@ -62,23 +62,30 @@ build_npu_exporter(){
   docker build --no-cache -t npu-exporter:v${version} -f Dockerfile-exporter-common .
 }
 
+build_clusterd(){
+  cd ${root_dir} ||  exit 1
+  unzip Ascend-mindxdl-clusterd_${version}_linux-${arch}.zip -d clusterd
+  cd ${root_dir}/clusterd || exit 1
+  docker build --no-cache -t clusterd:v${version}  .
+}
+
 build_volcano_v1.7(){
   cd ${root_dir}/ascend-volcano-plugin/volcano-v1.7.0 || exit 1
   docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0 ./ -f ./Dockerfile-scheduler
   docker build --no-cache -t volcanosh/vc-controller-manager:v1.7.0 ./ -f ./Dockerfile-controller
 }
 
-build_volcano_v1.4(){
-  cd ${root_dir}/ascend-volcano-plugin/volcano-v1.4.0 || exit 1
-  docker build --no-cache -t volcanosh/vc-scheduler:v1.4.0 ./ -f ./Dockerfile-scheduler
-  docker build --no-cache -t volcanosh/vc-controller-manager:v1.4.0 ./ -f ./Dockerfile-controller
+build_volcano_v1.9(){
+  cd ${root_dir}/ascend-volcano-plugin/volcano-v1.9.0 || exit 1
+  docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0 ./ -f ./Dockerfile-scheduler
+  docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0 ./ -f ./Dockerfile-controller
 }
 
 build_volcano(){
   cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-volcano_${version}_linux-${arch}.zip -d ascend-volcano-plugin
   build_volcano_v1.7
-  build_volcano_v1.4
+  build_volcano_v1.9
 }
 
 main(){
@@ -92,6 +99,7 @@ main(){
   build_resilience_controller
   build_hccl_controller
   build_ascend_operator
+  build_clusterd
     ;;
   "ascend-device-plugin")
   build_device_plugin
@@ -113,6 +121,9 @@ main(){
     ;;
   "ascend-operator")
   build_ascend_operator
+    ;;
+  "clusterd")
+  build_clusterd
     ;;
   *)
   echo "Unsupported parameters: $1"
