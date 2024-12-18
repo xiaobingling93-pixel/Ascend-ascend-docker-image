@@ -1,0 +1,4 @@
+# The packages
+*.run
+*.tar.gz
+*.whl
