@@ -31,7 +31,6 @@ RUN --mount=type=cache,target=/tmp,from=buildtemp,source=/tmp \
     chmod +x $NNRT_PKG && \
     chown root:root /usr && \
     chown root:root /usr/local && \
-    sed -i '$d' /etc/bashrc && \
     ./$NNRT_PKG --quiet --install --install-path=$ASCEND_BASE \
     --install-for-all $CHIPOPTION && \
     rm $NNRT_PKG && \

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-version=6.0.RC1
+version=6.0.RC3
 arch=$(arch)
 if [[ ${arch} == "x86_64" ]];then
   ARCH=x86
@@ -22,7 +22,7 @@ else
   ARCH=arm64
 fi
 
-repository=swr.cn-east-3.myhuaweicloud.com/test-ascendhub
+repository=swr.cn-east-3.myhuaweicloud.com/ascendhub-test
 
 push_resilience_controller(){
   docker tag resilience-controller:v${version} ${repository}/resilience-controller:v${version}-${ARCH}
@@ -60,10 +60,15 @@ push_volcano(){
   docker push ${repository}/vc-controller-manager:v1.7.0-${ARCH}
   docker push ${repository}/vc-scheduler:v1.7.0-${ARCH}
 
-  docker tag volcanosh/vc-controller-manager:v1.4.0 ${repository}/vc-controller-manager:v1.4.0-${ARCH}
-  docker tag volcanosh/vc-scheduler:v1.4.0 ${repository}/vc-scheduler:v1.4.0-${ARCH}
-  docker push ${repository}/vc-controller-manager:v1.4.0-${ARCH}
-  docker push ${repository}/vc-scheduler:v1.4.0-${ARCH}
+  docker tag volcanosh/vc-controller-manager:v1.9.0 ${repository}/vc-controller-manager:v1.9.0-${ARCH}
+  docker tag volcanosh/vc-scheduler:v1.9.0 ${repository}/vc-scheduler:v1.9.0-${ARCH}
+  docker push ${repository}/vc-controller-manager:v1.9.0-${ARCH}
+  docker push ${repository}/vc-scheduler:v1.9.0-${ARCH}
+}
+
+push_clusterd(){
+  docker tag clusterd:v${version} ${repository}/clusterd:v${version}-${ARCH}
+  docker push ${repository}/clusterd:v${version}-${ARCH}
 }
 
 main(){
@@ -76,6 +81,7 @@ main(){
   push_resilience_controller
   push_hccl_controller
   push_ascend_operator
+  push_clusterd
     ;;
   "ascend-device-plugin")
   push_device_plugin
@@ -97,6 +103,9 @@ main(){
     ;;
   "ascend-operator")
   push_ascend_operator
+    ;;
+  "clusterd")
+  push_clusterd
     ;;
   *)
   echo "Unsupported parameters: $1"
