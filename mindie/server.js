@@ -155,4 +155,5 @@ process.on('SIGTERM', () => {
 server.listen(PORT, () => {
     log(`Server started and listening at http://localhost:${PORT}`);
     log(`Serving files from directory: ${DIRECTORY}`);
+    log(`Please open another window to execute docker_build.sh`);
 });

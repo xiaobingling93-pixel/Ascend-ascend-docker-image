@@ -12,5 +12,5 @@ docker build \
 --build-arg CANN_VERSION=8.0.0 \
 --build-arg TORCH_VERSION=2.1.0 \
 --build-arg MINDIE_VERSION=1.0.0 \
--t base:1.0.0-py3.11-800I-A2-aarch64-Ubuntu22.04 \
+-t mindie:1.0.0-py3.11-800I-A2-aarch64-Ubuntu22.04 \
 .
