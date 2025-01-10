@@ -21,7 +21,7 @@
 
 - **推荐版本**：Node.js 18.x LTS 或更高版本
 - **最低版本要求**：Node.js 16.x LTS
-- **安装方式**：请参考 [Node.js 官方下载页面](https://nodejs.org/en/download/) 获取最新的 LTS 版本并安装。通常可以使用 `nvm`（Node Version Manager）来管理不同版本的 Node.js，但不安装 `nvm` 仅使用官方预先编译好的程序也足以满足本项目中的轻度使用需求。
+- **安装方式**：请参考 [Node.js 官方下载页面](https://nodejs.org/en/download/) 获取最新的 LTS 版本并安装。使用官方预先编译好的程序足以满足本项目中的轻度使用需求，也可以使用 `nvm`（Node Version Manager）来管理不同版本的 Node.js。
 
 > **注意**：确认安装成功后，可运行 `node --version` 来检查安装的版本。
 
@@ -36,6 +36,8 @@
 ## 目录结构
 
 **本仓库仅包含必须的脚本文件，不包含任何软件包，以下展示的目录结构是自行获取软件包之后的情况。**
+
+**目前`Ascend-mindie-atb-models_*.tar.gz`软件包属于定向开源，请按照官方指南获取。**
 
 **其中各变量对应构建脚本`docker_build.sh`中的参数，须在脚本中设定好对应的参数才可开始构建。**
 
@@ -124,11 +126,17 @@ docker build \
     node server.js
     ```
 
-    启动本地服务后，在构建过程中您应该能够看到类似如下输出，表示服务正常启动并开始提供文件：
+    启动本地服务后，您应该能够看到类似如下输出，表示服务正常启动：
 
     ```sh
     [2025-01-01T00:00:00.000Z] Server started and listening at http://localhost:3000
     [2025-01-01T00:00:00.000Z] Serving files from directory: /mindie-images
+    [2025-01-01T00:00:00.000Z] Please open another window to execute docker_build.sh
+    ```
+
+    **请保留此服务程序，不要关闭窗口，在新窗口中执行后续步骤。**在实际构建过程中，出现类似以下输出，表示正在传输文件：
+
+    ```sh
     [2025-01-01T00:00:00.000Z] Incoming request: GET /Ascend-mindie_1.0.0_linux-aarch64.run from ::ffff:172.17.0.3
     [2025-01-01T00:00:00.000Z] Successfully served file: Ascend-mindie_1.0.0_linux-aarch64.run (128794074 bytes)
 
@@ -223,8 +231,25 @@ docker build \
     ```
     根据 Docker 版本不同，将看到不同的回显信息。
 
+    > 若构建中出错，请考虑参考官方 `Docker build` 文档，进行问题定位，例如可以使用 `--no-cache` 与 `--progress plain` （新版本特有）参数，修改 `docker_build.sh` 来帮助查明报错原因。
+
 ## 启动容器
 ### 启动命令
+如果您使用的是root用户镜像（例如从Ascend Hub上取得），并且可以使用特权容器，请使用以下命令启动容器：
+```sh
+docker run -it -d --net=host --shm-size=1g \
+    --privileged true \
+    --name <container-name> \
+    --device=/dev/davinci_manager \
+    --device=/dev/hisi_hdc \
+    --device=/dev/devmm_svm \
+    -v /usr/local/Ascend/driver:/usr/local/Ascend/driver:ro \
+    -v /usr/local/sbin:/usr/local/sbin:ro \
+    -v /path-to-weights:/path-to-weights:ro \
+    mindie:1.0.0-800I-A2-py311-openeuler24.03-lts bash
+```
+
+如果您希望使用自行构建的普通用户镜像，并且规避容器相关权限风险，可以使用以下命令指定用户与设备：
 ```sh
 docker run -it -d --net=host --shm-size=1g \
     --user mindieuser:<HDK-user-group> \
@@ -243,21 +268,22 @@ docker run -it -d --net=host --shm-size=1g \
     -v /usr/local/Ascend/driver:/usr/local/Ascend/driver:ro \
     -v /usr/local/sbin:/usr/local/sbin:ro \
     -v /path-to-weights:/path-to-weights:ro \
-    mindie:1.0.0-py3.11-800I-A2-aarch64-Ubuntu22.04 bash
+    mindie:1.0.0-800I-A2-py311-openeuler24.03-lts bash
 ```
 > 注意，以上启动命令仅供参考，请根据需求自行修改再启动容器，尤其需要注意：
 >
-> 1. `--user`，如果您的环境中HDK是通过普通用户安装，请设置好对应的用户组，例如用户组1001可以使用HDK，则`--user mindieuser:1001`，镜像中默认使用的是用户组1000。如果您的HDK是由root用户安装，且指定了`--install-for-all`参数，则无需指定`--user`参数。
+> 1. `--user`，如果您的环境中HDK是通过普通用户安装（例如默认的`HwHiAiUser`，可以通过`id HwHiAiUser`命令查看该用户组ID），请设置好对应的用户组，例如用户组1001可以使用HDK，则`--user mindieuser:1001`，镜像中默认使用的是用户组1000。如果您的HDK是由root用户安装，且指定了`--install-for-all`参数，则无需指定`--user`参数。
 >
 > 2. 设定容器名称`--name`与镜像名称，例如`mindie:1.0.0-py3.11-800I-A2-aarch64-Ubuntu22.04`。
 >
 > 3. 设定想要使用的卡号`--device`。
 >
-> 4. 设定权重挂载的路径，`-v /path-to-weights:/path-to-weights:ro`，注意，权重路径所属应为镜像内默认的1000用户，且权限可设置为750。可使用以下命令进行修改：
+> 4. 设定权重挂载的路径，`-v /path-to-weights:/path-to-weights:ro`，注意，如果使用普通用户镜像，权重路径所属应为镜像内默认的1000用户，且权限可设置为750。可使用以下命令进行修改：
 >       ```sh
 >       chown -R 1000:1000 /path-to-weights
 >       chmod -R 755 /path-to-weights
 >       ```
+> 5. **在普通用户镜像中，注意所有文件均在 `/home/mindieuser` 下，请勿直接挂载 `/home` 目录，以免宿主机上存在相同目录，将容器内文件覆盖清除。**
 
 ### 进入容器
 ```sh
@@ -270,6 +296,16 @@ docker exec -it <container-name> bash
 ```sh
 npu-smi info
 ```
+
+如果出现以下信息：
+```sh
+bash: npu-smi: command not found
+```
+说明宿主机上的 `npu-smi` 工具不在 `/usr/local/sbin` 路径中，可能是由于HDK版本过旧或其他原因导致，可以使用以下命令找到该工具，并在启动容器时将其挂载到容器内：
+```sh
+find / -name npu-smi
+```
+一般来说，可能出现在 `/usr/local/bin/npu-smi` 路径下。
 
 ### 检验Torch是否可用
 启动Python，并输入以下命令：
