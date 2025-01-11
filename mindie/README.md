@@ -238,7 +238,7 @@ docker build \
 如果您使用的是root用户镜像（例如从Ascend Hub上取得），并且可以使用特权容器，请使用以下命令启动容器：
 ```sh
 docker run -it -d --net=host --shm-size=1g \
-    --privileged true \
+    --privileged \
     --name <container-name> \
     --device=/dev/davinci_manager \
     --device=/dev/hisi_hdc \
