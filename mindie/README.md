@@ -240,9 +240,6 @@ docker build \
 docker run -it -d --net=host --shm-size=1g \
     --privileged \
     --name <container-name> \
-    --device=/dev/davinci_manager \
-    --device=/dev/hisi_hdc \
-    --device=/dev/devmm_svm \
     -v /usr/local/Ascend/driver:/usr/local/Ascend/driver:ro \
     -v /usr/local/sbin:/usr/local/sbin:ro \
     -v /path-to-weights:/path-to-weights:ro \
@@ -274,14 +271,21 @@ docker run -it -d --net=host --shm-size=1g \
 >
 > 1. `--user`，如果您的环境中HDK是通过普通用户安装（例如默认的`HwHiAiUser`，可以通过`id HwHiAiUser`命令查看该用户组ID），请设置好对应的用户组，例如用户组1001可以使用HDK，则`--user mindieuser:1001`，镜像中默认使用的是用户组1000。如果您的HDK是由root用户安装，且指定了`--install-for-all`参数，则无需指定`--user`参数。
 >
-> 2. 设定容器名称`--name`与镜像名称，例如`mindie:1.0.0-py3.11-800I-A2-aarch64-Ubuntu22.04`。
+> 2. 设定容器名称`--name`与镜像名称，例如`mindie:1.0.0-800I-A2-py311-openeuler24.03-lts`。
 >
-> 3. 设定想要使用的卡号`--device`。
->
-> 4. 设定权重挂载的路径，`-v /path-to-weights:/path-to-weights:ro`，注意，如果使用普通用户镜像，权重路径所属应为镜像内默认的1000用户，且权限可设置为750。可使用以下命令进行修改：
+> 3. 如果不使用`--priviliged`参数，则需要设置各设备，包括设置想要使用的卡号`--device`：
 >       ```sh
->       chown -R 1000:1000 /path-to-weights
+>       ...
+>       --name <container-name> \
+>       --device=/dev/davinci_manager \
+>       --device=/dev/hisi_hdc \
+>       --device=/dev/davinci0 \
+>       ...
+>       ```
+> 4. 设定权重挂载的路径，`-v /path-to-weights:/path-to-weights:ro`，注意，权重路径权限应当设置为750。如果使用普通用户镜像，权重路径所属应为镜像内默认的1000用户。可参考以下命令进行修改：
+>       ```sh
 >       chmod -R 755 /path-to-weights
+>       chown -R 1000:1000 /path-to-weights
 >       ```
 > 5. **在普通用户镜像中，注意所有文件均在 `/home/mindieuser` 下，请勿直接挂载 `/home` 目录，以免宿主机上存在相同目录，将容器内文件覆盖清除。**
 
