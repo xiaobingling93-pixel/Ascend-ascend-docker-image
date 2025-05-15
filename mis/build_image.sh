@@ -13,7 +13,7 @@ function build_cann_image() {
   fi
 
   if [ -z "$python_version" ]; then
-    python_version="3.10
+    python_version="3.10"
   fi
 
   echo "build cann image with name [$cann_image]"
@@ -23,7 +23,7 @@ function build_cann_image() {
   else
     echo "building cann image: ${cann_image}"
     cd "$workdir"/dockerfiles/cann || exit
-    docker build -t --build-arg PYTHON_VER=${python_version} $cann_image . || exit
+    docker build --build-arg PYTHON_VER=${python_version} -t $cann_image . || exit
   fi
 }
 

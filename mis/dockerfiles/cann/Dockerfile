@@ -2,9 +2,9 @@ FROM ubuntu:22.04
 
 ARG PYTHON_VER=3.10
 ARG PLATFORM=910B
-ARG CANN_VERSION=${CANN_VERSION}
+ARG CANN_VERSION=8.0.0
 ENV DEBIAN_FRONTEND=noninteractive
-ENV no_proxy=1172.17.0.1,$no_proxy
+ENV no_proxy=172.17.0.1,$no_proxy
 
 WORKDIR /tmp
 
@@ -19,8 +19,8 @@ RUN apt-get update && apt-get -y install wget ca-certificates && update-ca-certi
 RUN pip3 install attrs cython numpy==1.24.0 decorator sympy cffi pyyaml pathlib2 psutil protobuf==3.20 scipy requests absl-py
 
 RUN wget -q http://172.17.0.1:3000/Ascend-cann-toolkit_${CANN_VERSION}_linux-aarch64.run -P cann/ && \
-    platform=$(echo $PLATFORM | tr '[A-Z] [a-z]') && \
-    wget -q http://172.17.0.1:3000/Ascend-cann-kernels-910b_${CANN_VERSION}_linux-aarch64.run -P cann/ && \
+    platform=$(echo $PLATFORM | tr '[A-Z]' '[a-z]') && \
+    wget -q http://172.17.0.1:3000/Ascend-cann-kernels-${platform}_${CANN_VERSION}_linux-aarch64.run -P cann/ && \
     wget -q http://172.17.0.1:3000/Ascend-cann-nnal_${CANN_VERSION}_linux-aarch64.run -P cann/ && \
     /bin/bash cann/Ascend-cann-toolkit*.run --install --quiet && \
     /bin/bash cann/Ascend-cann-kernels*.run --install --quiet && \
