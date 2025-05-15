@@ -8,7 +8,11 @@ ENV no_proxy=172.17.0.1,$no_proxy
 
 WORKDIR /tmp
 
-ARG PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+# ARG PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+
+RUN apt-get update && apt-get -y install wget ca-certificates && update-ca-certificates && \
+    wget -q http://172.17.0.1:3000/setup.ca.sh -P /tmp && \
+    bash /tmp/setup.ca.sh 
 
 RUN apt-get update && apt-get -y install wget ca-certificates && update-ca-certificates && \
     apt-get install -y software-properties-common && add-apt-repository ppa:deadsnakes/ppa && \

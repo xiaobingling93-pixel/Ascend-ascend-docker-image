@@ -22,13 +22,11 @@ export MIS_HOST=$1
 export MIS_PORT=$2
 export no_proxy=127.0.0.1,localhost
 
-# inner server port
-if [[ -z $INNER_PORT ]]; then
-	export INNER_PORT=9090
-fi
 
 #modify inner port
-sed -i "s|2025|$INNER_PORT|g" "$CUR_PATH"/config.yaml
+if [[ ! -z $MIS_INNER_PORT ]]; then
+    sed -i "s|2025|$MIS_INNER_PORT|g" "$CUR_PATH"/config.yaml
+fi
 
 
 function check_model_exists() {

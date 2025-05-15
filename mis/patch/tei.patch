@@ -73,6 +73,20 @@ index 036f3db..71d72e0 100644
 +    repeated TokenEmbedding allembeddings = 1;
 +}
 \ No newline at end of file
+diff --git a/backends/python/server/Makefile b/backends/python/server/Makefile
+index 6402d63..8ad0028 100644
+--- a/backends/python/server/Makefile
++++ b/backends/python/server/Makefile
+@@ -1,9 +1,3 @@
+-include Makefile-flash-att
+-include Makefile-flash-att-v2
+-
+-unit-tests:
+-	pytest -s -vv -m "not private" tests
+-
+ gen-server:
+ 	# Compile protos
+ 	pip install grpcio-tools==1.62.2 mypy-protobuf==3.6.0 'types-protobuf' --no-cache-dir
 diff --git a/backends/python/server/pyproject.toml b/backends/python/server/pyproject.toml
 index 0654eb7..46c3ca2 100644
 --- a/backends/python/server/pyproject.toml
@@ -91,7 +105,7 @@ index 0654eb7..46c3ca2 100644
  [tool.pytest.ini_options]
  markers = ["private: marks tests as requiring an admin hf token (deselect with '-m \"not private\"')"]
 diff --git a/backends/python/server/requirements.txt b/backends/python/server/requirements.txt
-index 687ec10..e325924 100644
+index 687ec10..49c5eb5 100644
 --- a/backends/python/server/requirements.txt
 +++ b/backends/python/server/requirements.txt
 @@ -6,10 +6,10 @@ deprecated==1.2.15 ; python_version >= "3.9" and python_version < "3.13"
@@ -118,15 +132,28 @@ index 687ec10..e325924 100644
  nvidia-cublas-cu12==12.4.5.8 ; platform_system == "Linux" and platform_machine == "x86_64" and python_version >= "3.9" and python_version < "3.13"
  nvidia-cuda-cupti-cu12==12.4.127 ; platform_system == "Linux" and platform_machine == "x86_64" and python_version >= "3.9" and python_version < "3.13"
  nvidia-cuda-nvrtc-cu12==12.4.127 ; platform_system == "Linux" and platform_machine == "x86_64" and python_version >= "3.9" and python_version < "3.13"
-@@ -56,7 +56,7 @@ setuptools==75.6.0 ; python_version >= "3.9" and python_version < "3.13"
+@@ -48,17 +48,17 @@ protobuf==4.25.5 ; python_version >= "3.9" and python_version < "3.13"
+ pyyaml==6.0.2 ; python_version >= "3.9" and python_version < "3.13"
+ regex==2024.11.6 ; python_version >= "3.9" and python_version < "3.13"
+ requests==2.32.3 ; python_version >= "3.9" and python_version < "3.13"
+-safetensors==0.4.5 ; python_version >= "3.9" and python_version < "3.13"
++safetensors==0.4.1 ; python_version >= "3.9" and python_version < "3.13"
+ scikit-learn==1.5.2 ; python_version >= "3.9" and python_version < "3.13"
+ scipy==1.13.1 ; python_version >= "3.9" and python_version < "3.13"
+-sentence-transformers==3.3.1 ; python_version >= "3.9" and python_version < "3.13"
++sentence-transformers==3.4.1 ; python_version >= "3.9" and python_version < "3.13"
+ setuptools==75.6.0 ; python_version >= "3.9" and python_version < "3.13"
  sympy==1.13.1 ; python_version >= "3.9" and python_version < "3.13"
  threadpoolctl==3.5.0 ; python_version >= "3.9" and python_version < "3.13"
  tokenizers==0.20.3 ; python_version >= "3.9" and python_version < "3.13"
 -torch==2.5.1 ; python_version >= "3.9" and python_version < "3.13"
 +torch==2.1.0 ; python_version >= "3.9" and python_version < "3.13"
  tqdm==4.67.1 ; python_version >= "3.9" and python_version < "3.13"
- transformers==4.46.3 ; python_version >= "3.9" and python_version < "3.13"
+-transformers==4.46.3 ; python_version >= "3.9" and python_version < "3.13"
++transformers==4.41.1 ; python_version >= "3.9" and python_version < "3.13"
  triton==3.1.0 ; platform_system == "Linux" and platform_machine == "x86_64" and python_version < "3.13" and python_version >= "3.9"
+ typer==0.6.1 ; python_version >= "3.9" and python_version < "3.13"
+ typing-extensions==4.12.2 ; python_version >= "3.9" and python_version < "3.13"
 diff --git a/backends/python/server/text_embeddings_server/models/__init__.py b/backends/python/server/text_embeddings_server/models/__init__.py
 index 9f56065..158a54c 100644
 --- a/backends/python/server/text_embeddings_server/models/__init__.py
@@ -569,14 +596,14 @@ index cadb6c1..1f0de1e 100644
      let listener = tokio::net::TcpListener::bind(&addr)
          .await
 diff --git a/router/src/lib.rs b/router/src/lib.rs
-index 49e0581..b58fcc7 100644
+index 49e0581..02a4bc7 100644
 --- a/router/src/lib.rs
 +++ b/router/src/lib.rs
 @@ -250,8 +250,9 @@ pub async fn run(
  
      if !backend.padded_model {
          tracing::info!("Warming up model");
-+        let max_batch_requests = Some(3)
++        let max_batch_requests = Some(3);
          backend
 -            .warmup(max_input_length, max_batch_tokens, max_batch_requests)
 +            .warmup(4, 4, max_batch_requests)

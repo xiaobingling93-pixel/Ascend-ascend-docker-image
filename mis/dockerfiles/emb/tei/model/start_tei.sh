@@ -1,7 +1,18 @@
 #!/bin/bash
 # Copyright © Huawei Technologies Co., Ltd. 2024. All rights reserved.
 CUR_PATH=$(dirname "$(readlink -f "$0")")
-ROOT_PATH=$(readlink -f "$CUR_PATH")
+ROOT_PATH=$(readlink -f "$CUR_PATH"/..)
+
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+source /usr/local/Ascend/nnal/atb/set_env.sh
+export LD_PRELOAD=$(ls /usr/local/lib/python3.11/dist-packages/scikit_learn.libs/libgomp-*):$LD_PRELOAD
+export PATH="/home/HwHiAiUser/.cargo/bin:$PATH"
+
+if [[ -n $(id | grep uid=0) ]];then
+    source /usr/local/Ascend/mxRag/script/set_env.sh
+else
+    source /home/HwHiAiUser/Ascend/mxRag/script/set_env.sh
+fi
 
 if [[ "$#" -ne 2 ]]; then
     echo "Need param:<listen_ip> <listen_port>"
@@ -9,32 +20,16 @@ if [[ "$#" -ne 2 ]]; then
 fi
 
 
-source /usr/local/Ascend/ascend-toolkit/set_env.sh
-
-export MIS_ENGINE_TYPE="clip-service"
-export CLIP_CONFIG_PATH=$CUR_PATH/config.yaml
+export MIS_ENGINE_TYPE="tei-service"
 export MIS_CACHE_PATH="/opt/mis/.cache"
-export MIS_MODEL=MindSDK/ViT-B-16
-
-export JINA_HIDE_SURVEY=1
-
+export MIS_MODEL=MindSDK/bge-large-zh-v1.5
 export MIS_HOST=$1
 export MIS_PORT=$2
 export no_proxy=127.0.0.1,localhost
 
-# inner server port
-if [[ -z $INNER_PORT ]]; then
-	export INNER_PORT=9090
-fi
-
-#modify inner port
-sed -i "s|2025|$INNER_PORT|g" "$CUR_PATH"/config.yaml
-
 
 function check_model_exists() {
-	ret=$(ls ${MIS_CACHE_PATH}/${MIS_MODEL}/*.pt | wc -l)
-
-    if [[ $ret -eq 0 ]]; then
+    if [[ ! -e "${MIS_CACHE_PATH}/${MIS_MODEL}/config.json" ]]; then
         echo "Model '${MIS_CACHE_PATH}/${MIS_MODEL}' does not exist."
         return 1
     else
@@ -46,7 +41,7 @@ function check_model_exists() {
 function download_model() {
     local retry_time=1
     local max_retries=5
-    echo "Downloading model '${MIS_MODEL}' from modelscope ..."
+    echo "Downloading model '${MIS_MODEL}' from modelers ..."
     while [[ ${retry_time} -le ${max_retries} ]]; do
 		rm -rf "${MIS_CACHE_PATH}/${MIS_MODEL}"
 		mkdir -p "${MIS_CACHE_PATH}/MindSDK"
@@ -64,11 +59,17 @@ function download_model() {
     return 1
 }
 
+function config_env() {
+    eval "$(jq -r 'to_entries[] | "export \(.key | ascii_upcase | gsub("[^A-Za-z0-9_]"; "_"))=\(.value | @sh)"' $CUR_PATH/config.json)"
+}
+
 if ! check_model_exists; then
 	if ! download_model; then
-		echo "Download model $MIS_MODEL failed" 
+		echo "Download model ${MIS_MODEL} failed" 
 		exit 1
 	fi
 fi
 
-mis_clip
+config_env
+
+mis_tei
