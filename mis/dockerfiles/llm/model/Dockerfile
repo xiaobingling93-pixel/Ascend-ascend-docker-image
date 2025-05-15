@@ -12,6 +12,7 @@ COPY build/configs ./configs/
 COPY build/patch ./patch/
 
 RUN pip3 install mis*.whl
+RUN pip3 install openmind_hub
 RUN chmod +x patch/patch.sh && ./patch/patch.sh
 
 CMD ["mis_run"]
