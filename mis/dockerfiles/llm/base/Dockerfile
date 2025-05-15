@@ -7,6 +7,12 @@ ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 ARG PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 
+RUN wget -q http://172.17.0.1:3000/Ascend-mindie_1.0.0_linux-aarch64.run -P cann/ && \
+    wget -q http://172.17.0.1:3000/Ascend-mindie-atb-models_1.0.0_linux-aarch64_py310_torch2.3.1-abi0.tar.gz -P cann/ && \
+    /bin/bash -c "source /usr/local/Ascend/ascend-toolkit/set_env.sh; /bin/bash cann/Ascend-mindie_*.run --install --quiet" && \
+    /bin/bash -c "mkdir -p /usr/local/Ascend/atb; tar -zxvf cann/Ascend-mindie-atb-models*.tar.gz -C /usr/local/Ascend/atb/" && \
+    RM -rf *
+
 RUN apt-get install -y git && mkdir -p /opt/vllm-ascend/
 RUN cd /opt/vllm-ascend/ && \
     git clone https://github.com/vllm-project/vllm.git && \
