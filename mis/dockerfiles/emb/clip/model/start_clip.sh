@@ -25,7 +25,7 @@ export no_proxy=127.0.0.1,localhost
 
 #modify inner port
 if [[ ! -z $MIS_INNER_PORT ]]; then
-    sed -i "s|2025|$MIS_INNER_PORT|g" "$CUR_PATH"/config.yaml
+    sed -i "s|9090|${MIS_INNER_PORT}|g" "$CUR_PATH"/config.yaml
 fi
 
 

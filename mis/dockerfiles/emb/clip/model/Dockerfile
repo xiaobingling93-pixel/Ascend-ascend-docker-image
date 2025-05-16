@@ -8,11 +8,13 @@ RUN pip3 install uvicorn pydantic==1.10.21 fastapi
 
 COPY --chown=HwHiAiUser:HwHiAiUser build/config.yaml /home/HwHiAiUser
 
-RUN wget -q http://172.17.0.1/mis-7.1+t2-cp311-cp311-linux_${ARCH}.whl -P /tmp && pip3 install /tmp/is-7.1+t2-cp311-cp311-linux_${ARCH}.whl && rm -rf /tmp/*
+RUN wget -q http://172.17.0.1:3000/mis-7.1+t2-cp311-cp311-linux_${ARCH}.whl -P /tmp && pip3 install /tmp/mis-7.1+t2-cp311-cp311-linux_${ARCH}.whl && rm -rf /tmp/*
 
 COPY --chown=HwHiAiUser:HwHiAiUser ./start_clip.sh /home/HwHiAiUser
 
 USER HwHiAiUser:HwHiAiUser
+
+WORKDIR /home/HwHiAiUser
 
 ENTRYPOINT ["bash", "/home/HwHiAiUser/start_clip.sh"]
 

@@ -235,7 +235,6 @@ function build_clip_model_image() {
   fi
 
   cp -r $workdir/configs/emb/clip/${model_name}/config.yaml $docker_build_dir
-  cp -r $workdir/mis $docker_build_dir
 
   cd $workdir/dockerfiles/emb/clip/model || exit
   sed -i "s|export MIS_MODEL=.*|export MIS_MODEL=MindSDK/${model_name}|g" $workdir/dockerfiles/emb/tei/model/start_clip.sh

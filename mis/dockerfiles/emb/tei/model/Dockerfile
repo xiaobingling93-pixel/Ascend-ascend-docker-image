@@ -14,6 +14,8 @@ COPY --chown=HwHiAiUser:HwHiAiUser ./start_tei.sh /home/HwHiAiUser
 RUN chmod 755 /home/HwHiAiUser/start_tei.sh
 USER HwHiAiUser:HwHiAiUser
 
+WORKDIR /home/HwHiAiUser
+
 ENTRYPOINT ["bash", "/home/HwHiAiUser/start_tei.sh"]
 
 CMD ["127.0.0.1", "8080"]
