@@ -128,3 +128,50 @@ index 78fe4f77..e068982c 100644
 +                                    minibatch.embeddings = embeddings
  
 -        return docs
+diff --git a/server/clip_server/model/clip.py b/server/clip_server/model/clip.py
+index 0af92054..edbdb7e1 100644
+--- a/server/clip_server/model/clip.py
++++ b/server/clip_server/model/clip.py
+@@ -26,8 +26,7 @@ def _transform_blob(n_px):
+     return Compose(
+         [
+             _blob2image,
+-            Resize(n_px, interpolation=BICUBIC),
+-            CenterCrop(n_px),
++            Resize((n_px, n_px), interpolation=BICUBIC),
+             _convert_image_to_rgb,
+             ToTensor(),
+             Normalize(
+@@ -42,8 +41,7 @@ def _transform_ndarray(n_px):
+     return Compose(
+         [
+             ToTensor(),
+-            Resize(n_px, interpolation=BICUBIC),
+-            CenterCrop(n_px),
++            Resize((n_px, n_px), interpolation=BICUBIC),
+             Normalize(
+                 (0.48145466, 0.4578275, 0.40821073),
+                 (0.26862954, 0.26130258, 0.27577711),
+diff --git a/server/clip_server/model/cnclip_model.py b/server/clip_server/model/cnclip_model.py
+index a8761bae..bc9a76a0 100644
+--- a/server/clip_server/model/cnclip_model.py
++++ b/server/clip_server/model/cnclip_model.py
+@@ -1,5 +1,6 @@
+ # Originally from https://github.com/OFA-Sys/Chinese-CLIP. MIT License.
+ 
++import os
+ import torch
+ 
+ from clip_server.model.clip_model import CLIPModel
+@@ -26,9 +27,9 @@ class CNClipModel(CLIPModel):
+     ):
+         super().__init__(name, **kwargs)
+         self._name = _CNCLIP_MODEL_MAPS[name]
+-
++        model_path = os.path.join(os.environ.get("MIS_CACHE_PATH"), os.environ.get("MIS_MODEL"))
+         self._model, self._preprocess = load_from_name(
+-            _CNCLIP_MODEL_MAPS[name], device=device
++            _CNCLIP_MODEL_MAPS[name], device=device, download_root=model_path
+         )
+         self._model.eval()
+ 
