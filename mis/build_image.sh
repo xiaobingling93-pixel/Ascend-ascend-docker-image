@@ -73,7 +73,7 @@ function build_tei_cann_image() {
   else
     echo "building cann image: ${cann_image}"
     cd "$workdir"/dockerfiles/cann || exit
-    docker build --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg PYTHON_VER=${python_version} -t $cann_image . || exit
+    docker build --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg PYTHON_VER=${python_version} -t $cann_image -f Dockerfile_tei . || exit
   fi
 }
 
@@ -100,7 +100,7 @@ function build_clip_cann_image() {
   else
     echo "building cann image: ${cann_image}"
     cd "$workdir"/dockerfiles/cann || exit
-    docker build --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg PYTHON_VER=${python_version} -t $cann_image . || exit
+    docker build --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg PYTHON_VER=${python_version} -t $cann_image -f Dockerfile_clip . || exit
   fi
 }
 
@@ -401,7 +401,6 @@ case $stage in
   "tei-model")
     build_tei_model_image "$@"
     ;;
-
   "clip-cann")
     build_clip_cann_image  "$@"
     ;;

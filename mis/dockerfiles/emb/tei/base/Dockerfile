@@ -10,9 +10,9 @@ ENV no_proxy=172.17.0.1
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GIT_SSL_NO_VERIFY=1
 # 配置环境变量
-# ENV RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
-# ENV RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
-# ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+ENV RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
+ENV RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
+ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 
 RUN apt-get update && apt-get install -y jq curl wget git git-lfs ca-certificates libssl-dev zlib1g-dev unzip tar gcc make cmake libffi-dev g++ libprotobuf-dev pkg-config build-essential libbz2-dev libreadline-dev libsqlite3-dev llvm xz-utils liblzma-dev libopenblas-dev vim
 
