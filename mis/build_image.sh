@@ -292,7 +292,6 @@ function build_vlm_model_image() {
   docker build --build-arg BASE_IMAGE=${vlm_base_image} --build-arg MODEL="$model_name" -t "$model_name_lower":"$version" . || exit
 }
 
-
 function build_tei_model_image() {
   tei_base_image=$2
   model_name=$3
@@ -333,8 +332,6 @@ function build_tei_model_image() {
   docker build --no-cache  --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg BASE_IMAGE=$tei_base_image --build-arg MODEL="$model_name" -t "$model_name_lower":"$version" . || exit
 }
 
-
-
 function build_clip_model_image() {
   clip_base_image=$2
   model_name=$3
@@ -372,43 +369,6 @@ function build_clip_model_image() {
   sed -i "s|export MIS_MODEL=.*|export MIS_MODEL=MindSDK/${model_name}|g" $workdir/dockerfiles/emb/tei/model/start_clip.sh
 
   docker build --no-cache --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg BASE_IMAGE=$clip_base_image --build-arg MODEL="$model_name" -t "$model_name_lower":"$version" . || exit
-}
-
-
-function build_model_image() {
-  llm_base_image=$2
-  model_name=$3
-  version=$4
-
-  if [ -z "$llm_base_image" ]; then
-    llm_base_image="mis-llm-base:0.1"
-  fi
-
-  if [ -z "$model_name" ]; then
-    model_name="DeepSeek-R1-Distill-Qwen-7B"
-  fi
-
-  if [ -z "$version" ]; then
-    version="0.1"
-  fi
-
-  typeset -l model_name_lower
-  model_name_lower=$model_name
-
-  echo "from [$llm_base_image] build model image with name [$model_name_lower:$version]"
-
-  cd $workdir || exit
-  docker_build_dir=$workdir/dockerfiles/llm/model/build
-  mkdir -p "$docker_build_dir"
-  rm -rf "$docker_build_dir"/*
-
-  cp -r "$workdir"/mis*.whl "$docker_build_dir"
-  cp -r "$workdir"/configs "$docker_build_dir"
-  cp -r "$workdir"/patch "$docker_build_dir"
-
-  cd $workdir/dockerfiles/llm/model || exit
-
-  docker build --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg BASE_IMAGE=$llm_base_image --build-arg MODEL="$model_name" -t "$model_name_lower":"$version" . || exit
 }
 
 
@@ -451,5 +411,5 @@ case $stage in
   "clip-model")
     build_clip_model_image "$@"
     ;;
-  *) echo "Invalid stage, we only support [cann, llm-base, tei-base, clip-base, llm-model, tei-model, clip-model]"
+  *) echo "Invalid stage, we only support [llm-cann, llm-base, llm-model; vlm-cann, vlm-base, vlm-model;tei-cann, tei-base, tei-model;clip-cann, clip-base, clip-model]"
 esac
