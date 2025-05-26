@@ -5,11 +5,9 @@ workdir=$(
   pwd
 )
 
-HTTP_PROXY=http://50.64.138.169:3128
-
 function build_cann_image() {
   cann_image=$2
-   platform=$3
+  platform=$3
   python_version=$4
   if [ -z "$cann_image" ]; then
     cann_image="mis-cann:0.1"
@@ -55,6 +53,7 @@ function build_llm_base_image() {
     docker build --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg PLATFORM=${platform} --build-arg BASE_IMAGE=$cann_image -t $llm_base_image . || exit
   fi
 }
+
 
 function build_tei_base_image() {
   cann_image=$2
@@ -160,7 +159,6 @@ function build_model_image() {
   docker build --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg BASE_IMAGE=$llm_base_image --build-arg MODEL="$model_name" -t "$model_name_lower":"$version" . || exit
 }
 
-
 function build_tei_model_image() {
   tei_base_image=$2
   model_name=$3
@@ -241,6 +239,7 @@ function build_clip_model_image() {
 
   docker build --no-cache --build-arg http_proxy=$HTTP_PROXY --build-arg https_proxy=$HTTP_PROXY --build-arg BASE_IMAGE=$clip_base_image --build-arg MODEL="$model_name" -t "$model_name_lower":"$version" . || exit
 }
+
 
 stage=$1
 case $stage in

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=mis-cann:0.1
+ARG BASE_IMAGE=mis-llm-cann:0.1
 FROM ${BASE_IMAGE}
 
 WORKDIR /opt
