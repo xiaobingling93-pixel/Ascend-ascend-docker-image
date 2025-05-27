@@ -1,0 +1,177 @@
+diff --git a/server/clip_server/executors/clip_torch.py b/server/clip_server/executors/clip_torch.py
+index 78fe4f77..e068982c 100644
+--- a/server/clip_server/executors/clip_torch.py
++++ b/server/clip_server/executors/clip_torch.py
+@@ -6,6 +6,7 @@ from typing import Dict, Union, Optional
+ 
+ import numpy as np
+ import torch
++import torch_npu
+ from clip_server.executors.helper import (
+     preproc_image,
+     preproc_text,
+@@ -16,7 +17,7 @@ from clip_server.helper import __cast_dtype__
+ from clip_server.model import clip
+ from clip_server.model.clip_model import CLIPModel
+ from clip_server.model.tokenization import Tokenizer
+-from jina import DocumentArray, Executor, requests
++from jina import Document, DocumentArray, Executor, requests
+ from opentelemetry.trace import NoOpTracer, Span
+ 
+ 
+@@ -55,7 +56,17 @@ class CLIPEncoder(Executor):
+             self._access_paths = kwargs['traversal_paths']
+ 
+         if not device:
+-            device = 'cuda' if torch.cuda.is_available() else 'cpu'
++            if torch.npu.is_available():
++                device = torch.device('npu')
++                torch.npu.set_compile_mode(jit_compile=jit)
++                option = {'NPU_FUZZY_COMPILE_BLACKLIST': 'ReduceProd'}
++                torch.npu.set_option(option)
++                deviceIdx = os.environ.get('NPU_DEVICE')
++                if deviceIdx is not None and deviceIdx.isdigit() and int(deviceIdx) >= 0 and int(deviceIdx) <= 7:
++                    torch.npu.set_device(torch.device(f'npu:{deviceIdx}'))
++                device = str(device)
++            else:
++                device = 'cuda' if torch.cuda.is_available() else 'cpu'
+         self._device = device
+         if isinstance(dtype, str):
+             dtype = __cast_dtype__.get(dtype)
+@@ -97,7 +108,32 @@ class CLIPEncoder(Executor):
+         if not self.tracer:
+             self.tracer = NoOpTracer()
+ 
+-    def _preproc_images(self, docs: 'DocumentArray', drop_image_content: bool):
++        self._warmup()
++    
++    def _warmup(self):
++        txt_da = DocumentArray([Document(text='Hello,Clip')])
++        img_da = DocumentArray([
++            Document(uri='data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7')
++        ])
++        for minibatch, batch_data in img_da.map_batch(
++            partial(self._preproc_images, drop_image_content=True), batch_size=1, pool=self._pool
++        ):
++            with self.monitor(
++                name='encode_images_seconds',
++                documentation='images encode time in seconds'
++            ):
++                _ = self._model.encode_image(**batch_data).cpu().numpy().astype(np.float32)
++
++        for minibatch, batch_data in txt_da.map_batch(
++            self._preproc_texts, batch_size=1, pool=self._pool
++        ):
++            with self.monitor(
++                name='encode_texts_seconds',
++                documentation='texts encode time in seconds'
++            ):
++                _ = self._model.encode_text(**batch_data).cpu().numpy().astype(np.float32)
++
++    def _preproc_images(self, docs: DocumentArray, drop_image_content: bool):
+         with self.monitor(
+             name='preprocess_images_seconds',
+             documentation='images preprocess time in seconds',
+@@ -112,7 +148,7 @@ class CLIPEncoder(Executor):
+                     dtype=self._dtype,
+                 )
+ 
+-    def _preproc_texts(self, docs: 'DocumentArray'):
++    def _preproc_texts(self, docs: DocumentArray):
+         with self.monitor(
+             name='preprocess_texts_seconds',
+             documentation='texts preprocess time in seconds',
+@@ -126,13 +162,13 @@ class CLIPEncoder(Executor):
+                 )
+ 
+     @requests(on='/rank')
+-    async def rank(self, docs: 'DocumentArray', parameters: Dict, **kwargs):
++    async def rank(self, docs: DocumentArray, parameters: Dict, **kwargs):
+         _drop_image_content = parameters.get('drop_image_content', False)
+         await self.encode(docs['@r,m'], drop_image_content=_drop_image_content)
+ 
+         set_rank(docs)
+ 
+-    @requests
++    @requests(on='/encode')
+     async def encode(
+         self,
+         docs: 'DocumentArray',
+@@ -190,12 +226,14 @@ class CLIPEncoder(Executor):
+                                     name='encode_images_seconds',
+                                     documentation='images encode time in seconds',
+                                 ):
+-                                    minibatch.embeddings = (
++                                    embeddings = (
+                                         self._model.encode_image(**batch_data)
+                                         .cpu()
+                                         .numpy()
+                                         .astype(np.float32)
+                                     )
++                                    embeddings /= np.linalg.norm(embeddings, axis=-1, keepdims=True)
++                                    minibatch.embeddings = embeddings
+ 
+                     # for text
+                     if _txt_da:
+@@ -214,11 +252,12 @@ class CLIPEncoder(Executor):
+                                     name='encode_texts_seconds',
+                                     documentation='texts encode time in seconds',
+                                 ):
+-                                    minibatch.embeddings = (
++                                    embeddings = (
+                                         self._model.encode_text(**batch_data)
+                                         .cpu()
+                                         .numpy()
+                                         .astype(np.float32)
+                                     )
++                                    embeddings /= np.linalg.norm(embeddings, axis=-1, keepdims=True)
++                                    minibatch.embeddings = embeddings
+ 
+-        return docs
+diff --git a/server/clip_server/model/clip.py b/server/clip_server/model/clip.py
+index 0af92054..edbdb7e1 100644
+--- a/server/clip_server/model/clip.py
++++ b/server/clip_server/model/clip.py
+@@ -26,8 +26,7 @@ def _transform_blob(n_px):
+     return Compose(
+         [
+             _blob2image,
+-            Resize(n_px, interpolation=BICUBIC),
+-            CenterCrop(n_px),
++            Resize((n_px, n_px), interpolation=BICUBIC),
+             _convert_image_to_rgb,
+             ToTensor(),
+             Normalize(
+@@ -42,8 +41,7 @@ def _transform_ndarray(n_px):
+     return Compose(
+         [
+             ToTensor(),
+-            Resize(n_px, interpolation=BICUBIC),
+-            CenterCrop(n_px),
++            Resize((n_px, n_px), interpolation=BICUBIC),
+             Normalize(
+                 (0.48145466, 0.4578275, 0.40821073),
+                 (0.26862954, 0.26130258, 0.27577711),
+diff --git a/server/clip_server/model/cnclip_model.py b/server/clip_server/model/cnclip_model.py
+index a8761bae..bc9a76a0 100644
+--- a/server/clip_server/model/cnclip_model.py
++++ b/server/clip_server/model/cnclip_model.py
+@@ -1,5 +1,6 @@
+ # Originally from https://github.com/OFA-Sys/Chinese-CLIP. MIT License.
+ 
++import os
+ import torch
+ 
+ from clip_server.model.clip_model import CLIPModel
+@@ -26,9 +27,9 @@ class CNClipModel(CLIPModel):
+     ):
+         super().__init__(name, **kwargs)
+         self._name = _CNCLIP_MODEL_MAPS[name]
+-
++        model_path = os.path.join(os.environ.get("MIS_CACHE_PATH"), os.environ.get("MIS_MODEL"))
+         self._model, self._preprocess = load_from_name(
+-            _CNCLIP_MODEL_MAPS[name], device=device
++            _CNCLIP_MODEL_MAPS[name], device=device, download_root=model_path
+         )
+         self._model.eval()
+ 
