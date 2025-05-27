@@ -1,0 +1,39 @@
+jtype: Flow
+version: '1'
+gateway:
+  title: Clip Service
+  description: A clip service that embeds text or images.
+  prefetch: 100
+  grpc_server_options:
+    grpc.keepalive_time_ms: 300000
+    grpc.keepalive_timeout_ms: 20000
+  grpc_channel_options:
+    grpc.keepalive_time_ms: 300000
+    grpc.keepalive_timeout_ms: 20000
+  port:
+    - 9090
+  protocol:
+    - http
+  cors: true
+  no_crud_endpoints: true
+  no_debug_endpoints: true
+  expose_endpoints:
+    /encode:
+      methods: ["POST"]
+      summary: Encode texts or images
+      tags:
+        - embedding
+executors:
+  - name: clip_t
+    uses:
+      jtype: CLIPEncoder
+      with:
+        name: CN-CLIP/ViT-B-16
+        num_worker_preprocess: 16
+        minibatch_size: 32
+        jit: false
+      metas:
+        py_modules:
+          - clip_server.executors.clip_torch
+    timeout_ready: 3000000
+    replicas: 1
