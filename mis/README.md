@@ -121,9 +121,9 @@ nodejs server.js
 ```
 回到MIS目录，參考以下命令完成镜像构建
 ```shell
-bash build_image.sh vlm-cann mis-vlm-cann:0.1
-bash build_image.sh vlm-base mis-vlm-cann:0.1 mis-vlm-base:0.1
-bash build_image.sh vlm-model mis-vlm-base:0.1 Qwen2.5-VL-7B-Instruct 0.1
+bash build_image.sh tei-cann mis-tei-cann:0.1 910B 3.11
+bash build_image.sh tei-base mis-tei-cann:0.1 mis-tei-base:0.1 910B
+bash build_image.sh tei-model mis-tei-base:0.1 bge-large-zh-v1.5 0.1
 ```
 
 ## clip镜像制作
@@ -135,7 +135,7 @@ bash build_image.sh vlm-model mis-vlm-base:0.1 Qwen2.5-VL-7B-Instruct 0.1
 | 组件          | 类型           | 版本                                                                                                                                     |
 |-------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------|
 | Ubuntu      | 系统镜像         | 22.04                                                                                                                                  |
-| cann        | 昇腾异构计算架构和算子库 | [8.1.RC1.beta1](https://www.hiascend.com/developer/download/community/result?module=cann&cann=8.1.RC1.beta1)                           |
+| cann        | 昇腾异构计算架构和算子库 | [8.0.0](https://www.hiascend.com/developer/download/community/result?module=cann&cann=8.0.0)                           |
 | clip-as-service | 图片向量化推理框架  | [v0.8.3](https://github.com/jina-ai/clip-as-service.git)                                                                 |
 
 ### 构建说明
@@ -149,9 +149,8 @@ patch/
 ```
 还需要准备cann，mindie相关软件包，并放置于任意目录
 ```text
-Ascend-cann-toolkit_8.1.RC1_linux-aarch64.run
-Ascend-cann-kernels-910b_8.1.RC1_linux-aarch64.run
-Ascend-cann-nnal_8.1.RC1_linux-aarch64.run
+Ascend-cann-toolkit_8.0.0_linux-aarch64.run
+Ascend-cann-kernels-910b_8.0.0_linux-aarch64.run
 ```
 准备server.js文件，和上述软件包放置于相同目录，server.js文件见附录
 使用以下命令启动服务，此时构建镜像可以通过http的方式下载软件包，减少镜像的大小，nodejs版本无要求
@@ -160,9 +159,9 @@ nodejs server.js
 ```
 回到MIS目录，參考以下命令完成镜像构建
 ```shell
-bash build_image.sh vlm-cann mis-vlm-cann:0.1
-bash build_image.sh vlm-base mis-vlm-cann:0.1 mis-vlm-base:0.1
-bash build_image.sh vlm-model mis-vlm-base:0.1 Qwen2.5-VL-7B-Instruct 0.1
+bash build_image.sh clip-cann mis-clip-cann:0.1 910B 3.11
+bash build_image.sh clip-base mis-clip-cann:0.1 mis-vlclipm-base:0.1 910B
+bash build_image.sh clip-model mis-clip-base:0.1 ViT-B-16 0.1
 ```
 
 ## 附录
