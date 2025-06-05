@@ -1,0 +1,15 @@
+FROM openeuler/openeuler:22.03-lts
+
+RUN yum update && yum install -y kmod unzip findutils 
+
+WORKDIR /app
+
+COPY davinci.conf .
+COPY install_ko.sh .
+COPY installation.py . 
+COPY entrypoint.sh .
+
+RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/install_ko.sh
+
+CMD ["/app/entrypoint.sh"]
