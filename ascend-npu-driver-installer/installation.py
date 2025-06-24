@@ -44,6 +44,7 @@ class Commands:
         :param command: The command to execute.
         :return: The output of the command.
         """
+        logging.info(f"Executing command: {command}")
         result = subprocess.run(command, check=True, shell=True)
         if result.returncode != 0:
             raise RuntimeError(
@@ -58,91 +59,47 @@ class Installation:
     """
 
     def __init__(self):
-        self.working_dir = "/app"
-        self.kernel_version = os.uname().release
-        self.ko_folder = f"/lib/modules/{self.kernel_version}/npu_driver"
-        self.ascend_tool_path = "/usr/local/Ascend/driver/tools"
-        self.npu_pattern = "Ascend-hdk-*-npu_*.zip"
-        self.npu_run_file = None
-        self.driver_dir = os.path.join(self.working_dir, "npu_driver")
-        self.ko_files = Path("/app/ko_files")
-
-    def _unzip_npu_driver(self):
-        npu_unzipped_folder = os.path.join(self.working_dir, "npu_unzipped_driver")
-        pattern = os.path.join(self.working_dir, self.npu_pattern)
-        matches = glob.glob(pattern)
-        if not matches:
-            raise FileNotFoundError("No NPU driver zip file matching pattern found.")
-        outer_zip = matches[0]
-
-        with zipfile.ZipFile(outer_zip, 'r') as zip1:
-            zip1.extractall(npu_unzipped_folder)
-
-        inner_zips = glob.glob(os.path.join(npu_unzipped_folder, self.npu_pattern))
-        if not inner_zips:
-            raise FileNotFoundError("No NPU driver zip file matching pattern found.")
-        inner_zip = inner_zips[0]
-        with zipfile.ZipFile(inner_zip, 'r') as zip2:
-            zip2.extractall(npu_unzipped_folder)
-
-        # 查找 .run 文件
-        run_files = glob.glob(os.path.join(npu_unzipped_folder, '*-npu-driver_*.run'))
-        if not run_files:
-            raise FileNotFoundError("No npu driver .run file found in extracted content.")
-        self.npu_run_file = run_files[0]
-
-    def _unzip_npu_run_file(self):
-        self._unzip_npu_driver()
-        command = "bash {} --noexec --extract={}".format(self.npu_run_file, self.driver_dir)
-        Commands.run(command)
-        logging.info("Unzipped npu run file successfully.")
         
-    def _setup(self):
-        """
-        Setup the installation environment
-        """
-        paths = [
-            "/usr/local/Ascend",
-            "/user/local/Ascend/driver/lib64/common",
-            self.ko_folder
-        ]
+        # dir in container
+        self.ctr_working_dir = "/app"
+        self.ctr_npu_zip_dir = os.path.join(self.ctr_working_dir, "npu_driver_zip")
+        self.ctr_npu_pattern = "*-*-npu_*.zip"
+        self.ctr_npu_run_file = None
+        self.ctr_npu_unzipped_folder = os.path.join(self.ctr_working_dir, "npu_unzipped_driver")
+        self.repack_npu = os.path.join(self.ctr_npu_unzipped_folder, "repack_npu")
+        self.ctr_driver_dir = os.path.join(self.ctr_working_dir, "npu_driver")
 
-        for path in paths:
+        # dir in host
+        self.host_ascend_base_path = "/usr/local/Ascend"
+        self.host_ascend_driver_path = os.path.join(self.host_ascend_base_path, "driver")
+        self.host_ascend_tool_path = os.path.join(self.host_ascend_driver_path, "tools")
+        self.host_ascend_lib64_path = os.path.join(self.host_ascend_driver_path, "lib64")
+        self.kernel_version = os.uname().release
+        self.host_ko_files = f"/lib/modules/{self.kernel_version}/npu_driver"
+        # mount lib of host to container: -v /lib:/mnt/lib
+        # avoid some protential issues
+        self.host_mnt_lib = "/mnt/lib"
+        self.host_etc = "/mnt/etc"
+        self.install_info = os.path.join(self.host_etc, "ascend_install.info")
+
+    def _clear(self):
+        """
+        Clear the working directory by removing all files and subdirectories.
+        """
+        for path in [
+            self.ctr_driver_dir, 
+            self.ctr_npu_unzipped_folder, 
+            self.host_ascend_base_path, 
+            self.host_ko_files
+        ]:
             if os.path.exists(path):
                 logging.info(f"Removing existing directory: {path}")
                 shutil.rmtree(path)
-            os.makedirs(path, exist_ok=True)
-            logging.info(f"Created directory: {path}")
 
-        logging.info("Setup completed successfully.")
-
-    def _copy_resources(self):
-        """
-        Copy necessary resources for installation.
-        """
-        commands = [
-            f"cp -r {self.driver_dir}/driver /usr/local/Ascend/",
-            "cp -r /app/davinci.conf /mnt/lib/",
-            f"cp -r {self.driver_dir}/driver/script/dms_events_conf.lst /etc/",
-            "cp /usr/local/Ascend/driver/lib64/*.so /usr/local/Ascend/driver/lib64/common",
-            f"cp /app/ko_files/*.ko {self.ko_folder}",
-        ]
-        for command in commands:
-            Commands.run(command)
-        logging.info("Resources copied successfully.")
-
-    @staticmethod
-    def _update_permissions():
-        """
-        Update permissions for the copied resources.
-        """
-        commands = [
-            "chmod 777 /mnt/lib/davinci.conf",
-            "chmod 777 /etc/dms_events_conf.lst"
-        ]
-        for command in commands:
-            Commands.run(command)
-        logging.info("Permission updated successfully.")
+    def _make_file_executable(self):
+        command = f"chmod +x {self.host_ascend_tool_path}/*"
+        Commands.run(command)
+        logging.info(f"Make all the file in {self.host_ascend_tool_path} to executable successfully.")
 
     @staticmethod
     def _extract_array(content: str, key: str) -> List[str]:
@@ -157,10 +114,95 @@ class Installation:
         if not match:
             raise ValueError(f"Key '{key}' not found in content.")
         return match.group(1).strip().split()
+        
+    def _unzip_npu_driver(self):
+        pattern = os.path.join(self.ctr_npu_zip_dir, self.ctr_npu_pattern)
+        matches = glob.glob(pattern)
+        if not matches:
+            raise FileNotFoundError("No NPU driver zip file matching pattern found.")
+        outer_zip = matches[0]
+        logging.info(f"Detected NPU driver zip package: {outer_zip}")
 
-    def _update_specific_func(self):
-        target_dir = "/usr/local/Ascend/driver/device"
-        specific_func_file = f"{self.driver_dir}/driver/script/specific_func.inc"
+        with zipfile.ZipFile(outer_zip, 'r') as zip1:
+            zip1.extractall(self.ctr_npu_unzipped_folder)
+
+        inner_zips = glob.glob(os.path.join(self.ctr_npu_unzipped_folder, self.ctr_npu_pattern))
+        if not inner_zips:
+            raise FileNotFoundError("No NPU driver zip file matching pattern found.")
+        inner_zip = inner_zips[0]
+        with zipfile.ZipFile(inner_zip, 'r') as zip2:
+            zip2.extractall(self.ctr_npu_unzipped_folder)
+
+        # 查找 .run 文件
+        run_files = glob.glob(os.path.join(self.ctr_npu_unzipped_folder, '*-npu-driver_*.run'))
+        if not run_files:
+            raise FileNotFoundError("No npu driver .run file found in extracted content.")
+        self.npu_run_file = run_files[0]
+    
+    def setup(self):
+        """
+        Setup the installation environment
+        """
+        self._clear()
+        paths = [
+            self.host_ascend_base_path,
+            os.path.join(self.host_ascend_lib64_path, "common"),
+            self.host_ko_files
+        ]
+
+        for path in paths:
+            os.makedirs(path, exist_ok=True)
+            logging.info(f"Created directory: {path}")
+        logging.info("Setup completed successfully.")
+
+    def unzip_and_repack_npu(self):
+        """
+        step 1: extract *.run to temp
+        step 2: repack temp
+        step 3: extract temp-custom.run
+        step 4: get ko files from self.ctr_driver_dir/driver/host
+        """
+        self._unzip_npu_driver()
+        commands = [
+            f"bash {self.npu_run_file} --noexec --extract={self.repack_npu}",
+            f"bash {self.npu_run_file} --repack-path={self.repack_npu} {self.repack_npu}.run",
+            f"bash {self.repack_npu}.run --noexec --extract={self.ctr_driver_dir}"
+        ]
+        for command in commands:
+            Commands.run(command)
+        logging.info(f"Unzipped npu run file: {self.npu_run_file} successfully.")
+        logging.info(f"Compile ko files: {self.ctr_driver_dir} successfully.")
+
+    def copy_resources(self):
+        """
+        Copy necessary resources for installation.
+        """
+        commands = [
+            f"cp -r {self.ctr_driver_dir}/driver {self.host_ascend_base_path}",
+            f"cp -r /app/davinci.conf {self.host_mnt_lib}",
+            f"cp -r {self.host_ascend_driver_path}/script/dms_events_conf.lst {self.host_etc}",
+            f"cp {self.host_ascend_lib64_path}/*.so {os.path.join(self.host_ascend_lib64_path, 'common')}",
+            f"cp {self.ctr_driver_dir}/driver/host/*.ko {self.host_ko_files}",
+        ]
+        for command in commands:
+            Commands.run(command)
+        logging.info("Resources copied successfully.")
+
+    def update_permissions(self):
+        """
+        Update permissions for the copied resources.
+        """
+        commands = [
+            f"chmod 777 {os.path.join(self.host_mnt_lib, 'davinci.conf')}",
+            f"chmod 777 {self.host_etc}/dms_events_conf.lst"
+        ]
+        for command in commands:
+            Commands.run(command)
+        logging.info("Permission updated successfully.")
+
+    def update_specific_func(self):
+        target_dir = os.path.join(self.host_ascend_driver_path, "device")
+        specific_func_file = f"{self.host_ascend_driver_path}/script/specific_func.inc"
 
         with open(specific_func_file, 'r', encoding="utf-8") as file:
             content = file.read()
@@ -181,25 +223,20 @@ class Installation:
             logging.info(f"Renaming {src_file} to {dst_file} successfully.")
     
     @staticmethod
-    def _install_ko():
+    def install_ko():
         command = "bash /app/install_ko.sh"
         Commands.run(command)
         logging.info(f"Installed ko files successfully.")
 
-    def _make_file_executable(self):
-        command = f"chmod +x {self.ascend_tool_path}/*"
-        Commands.run(command)
-        logging.info(f"Make all the file in {self.ascend_tool_path} to executable successfully.")
-
-    def _configure_env(self):
+    def configure_env(self):
         """
         Configure the environment for the installation.
         """
-        env_path = Path("/etc/profile.d/ascend.sh")
+        env_path = Path(f"{self.host_etc}/profile.d/ascend.sh")
         env_content = (
-            "export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/common:"
-            "/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH\n"
-            f"export PATH=$PATH:{self.ascend_tool_path}/"
+            f"export LD_LIBRARY_PATH={self.host_ascend_lib64_path}/common:"
+           f"{self.host_ascend_lib64_path}/driver:$LD_LIBRARY_PATH\n"
+            f"export PATH=$PATH:{self.host_ascend_tool_path}/"
             )
 
         try:
@@ -212,7 +249,7 @@ class Installation:
         # add env command to bashrc
         # mount: /root/.bashrc:/host_bashrc
         bashrc_path = Path("/host_bashrc")
-        env_command = f"bash {env_path}\n"
+        env_command = f"bash /etc/profile.d/ascend.sh\n"
         try:
             if bashrc_path.exists():
                 content = bashrc_path.read_text(encoding="utf-8")
@@ -222,19 +259,47 @@ class Installation:
         except Exception as e:
             raise RuntimeError(f"Failed to add env command to bashrc: {e}") from e
 
+    def write_complete_signal(self):
+        """
+        Write a completion signal to a file.
+        """
+        prefix = "Driver_Install_Status"
+        if not os.path.exists(self.install_info):
+            with open(self.install_info, "w") as f:
+                f.write(f"{prefix}=complete")
+            return 
+        with open(self.install_info, "r") as f:
+            lines = f.readlines()
+
+        new_lines = []
+        found = False
+        for line in lines:
+            if line.startswith(prefix):
+                new_lines.append(f"{prefix}=complete")
+                found = True
+            else:
+                new_lines.append(line)
+
+        if not found:
+            new_lines.append(self.install_info)
+
+        with open(self.install_info, "w") as f:
+            f.writelines(new_lines)
+        logging.info(f"Write install complete info to {self.install_info} successfully.")
+
     def install(self):
         """
         Main installation method that orchestrates the setup, copying of resources,
         updating permissions, installing kernel objects, and configuring the environment.
         """
-        self._setup()
-        self._unzip_npu_run_file()
-        self._copy_resources()
-        self._update_permissions()
-        self._update_specific_func()
-        self._install_ko()
-        self._configure_env()
-
+        self.setup()
+        self.unzip_and_repack_npu()
+        self.copy_resources()
+        self.update_permissions()
+        self.update_specific_func()
+        self.install_ko()
+        self.configure_env()
+        self.write_complete_signal()
 
 if __name__ == "__main__":
     installer = Installation()

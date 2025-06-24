@@ -1,6 +1,8 @@
 FROM openeuler/openeuler:22.03-lts
 
-RUN yum update && yum install -y kmod unzip findutils 
+RUN yum update && yum install -y kmod unzip findutils pigz
+
+RUN yum groupinstall -y "Development Tools"
 
 WORKDIR /app
 
