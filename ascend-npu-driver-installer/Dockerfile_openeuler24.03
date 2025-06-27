@@ -1,0 +1,17 @@
+FROM openeuler/openeuler:24.03
+
+RUN yum update -y && yum install -y kmod unzip findutils pigz
+
+RUN yum groupinstall -y "Development Tools"
+
+WORKDIR /app
+
+COPY davinci.conf .
+COPY install_ko.sh .
+COPY installation.py . 
+COPY entrypoint.sh .
+
+RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/install_ko.sh
+
+CMD ["/app/entrypoint.sh"]

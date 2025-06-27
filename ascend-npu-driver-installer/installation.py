@@ -51,7 +51,7 @@ class Commands:
                 f"Command '{command}' failed with return code {result.returncode}. "
                 f"Output: {result.stdout.strip()}, Error: {result.stderr.strip() if result.stderr else ''}"
             )
-
+    
 
 class Installation:
     """
@@ -59,6 +59,8 @@ class Installation:
     """
 
     def __init__(self):
+
+        self.using_ko_compile = os.getenv("KO_COMPILE", "0")
         
         # dir in container
         self.ctr_working_dir = "/app"
@@ -66,11 +68,11 @@ class Installation:
         self.ctr_npu_pattern = "*-*-npu_*.zip"
         self.ctr_npu_run_file = None
         self.ctr_npu_unzipped_folder = os.path.join(self.ctr_working_dir, "npu_unzipped_driver")
-        self.repack_npu = os.path.join(self.ctr_npu_unzipped_folder, "repack_npu")
         self.ctr_driver_dir = os.path.join(self.ctr_working_dir, "npu_driver")
+        self.ctr_ko_files = os.path.join(self.ctr_working_dir, "ko_files")
 
         # dir in host
-        self.host_ascend_base_path = "/usr/local/Ascend"
+        self.host_ascend_base_path = "/mnt/usr/local/Ascend"
         self.host_ascend_driver_path = os.path.join(self.host_ascend_base_path, "driver")
         self.host_ascend_tool_path = os.path.join(self.host_ascend_driver_path, "tools")
         self.host_ascend_lib64_path = os.path.join(self.host_ascend_driver_path, "lib64")
@@ -89,6 +91,7 @@ class Installation:
         for path in [
             self.ctr_driver_dir, 
             self.ctr_npu_unzipped_folder, 
+            self.ctr_ko_files,
             self.host_ascend_base_path, 
             self.host_ko_files
         ]:
@@ -147,6 +150,7 @@ class Installation:
         paths = [
             self.host_ascend_base_path,
             os.path.join(self.host_ascend_lib64_path, "common"),
+            self.ctr_ko_files,
             self.host_ko_files
         ]
 
@@ -155,23 +159,63 @@ class Installation:
             logging.info(f"Created directory: {path}")
         logging.info("Setup completed successfully.")
 
-    def unzip_and_repack_npu(self):
+    def process_npu(self):
+        self._unzip_npu_driver()
+        if self.using_ko_compile == "1":
+            logging.info(f"ENV: KO_COMPILE={self.using_ko_compile}, compile ko files.")
+            self._compile_ko_files()
+        else:
+            logging.info(f"ENV: KO_COMPILE={self.using_ko_compile}, repack npu files.")
+            self._repack_npu()
+
+    def _compile_ko_files(self):
+        Commands.run(f"bash {self.npu_run_file} --noexec --extract={self.ctr_driver_dir}")
+        kernel_path = os.path.join(self.ctr_driver_dir, "driver", "kernel")
+        
+        makefile = os.path.join(kernel_path, "Makefile_milan")
+        if not os.path.exists(makefile):
+            makefile = os.path.join(kernel_path, "Makefile_mini1910p")
+        dkms_conf = os.path.join(kernel_path, "dkms_milan.conf")
+        if not os.path.exists(dkms_conf):
+            dkms_conf =  os.path.join(kernel_path, "dkms_mini1910p.conf")
+
+        os.chdir(f"{self.ctr_driver_dir}/driver/kernel")
+        origin_make = ""
+        try:
+            with open(dkms_conf, "r", encoding="utf-8") as file:
+                content = file.read()
+            for line in content.splitlines():
+                if line.startswith("MAKE[0]"):
+                    origin_make = line.split("MAKE[0]=")[1].strip()
+        except Exception as e:
+            raise RuntimeError(f"Failed to read dkms_milan.conf: {e}") from e
+        origin_make = origin_make.strip("\"").replace("KERNEL_UNAME=${kernelver}", "")
+        commands = [
+            f"cp {makefile} {kernel_path}/Makefile",
+            origin_make,
+            f"find . -type f -name '*.ko' -exec cp {{}} {self.ctr_ko_files} \\;",
+        ]
+        for command in commands:
+            Commands.run(command)
+        logging.info(f"Unzip NPU file and compile ko files: {self.ctr_driver_dir} successfully.")
+
+    def _repack_npu(self):
         """
         step 1: extract *.run to temp
         step 2: repack temp
         step 3: extract temp-custom.run
         step 4: get ko files from self.ctr_driver_dir/driver/host
         """
-        self._unzip_npu_driver()
+        repack_npu = os.path.join(self.ctr_npu_unzipped_folder, "repack_npu")
         commands = [
-            f"bash {self.npu_run_file} --noexec --extract={self.repack_npu}",
-            f"bash {self.npu_run_file} --repack-path={self.repack_npu} {self.repack_npu}.run",
-            f"bash {self.repack_npu}.run --noexec --extract={self.ctr_driver_dir}"
+            f"bash {self.npu_run_file} --noexec --extract={repack_npu}",
+            f"bash {self.npu_run_file} --repack-path={repack_npu} {repack_npu}.run",
+            f"bash {repack_npu}.run --noexec --extract={self.ctr_driver_dir}",
+            f"cp {self.ctr_driver_dir}/driver/host/*.ko {self.ctr_ko_files}/"
         ]
         for command in commands:
             Commands.run(command)
-        logging.info(f"Unzipped npu run file: {self.npu_run_file} successfully.")
-        logging.info(f"Compile ko files: {self.ctr_driver_dir} successfully.")
+        logging.info(f"Unzipped and repack NPU file: {self.npu_run_file} successfully.")
 
     def copy_resources(self):
         """
@@ -182,7 +226,7 @@ class Installation:
             f"cp -r /app/davinci.conf {self.host_mnt_lib}",
             f"cp -r {self.host_ascend_driver_path}/script/dms_events_conf.lst {self.host_etc}",
             f"cp {self.host_ascend_lib64_path}/*.so {os.path.join(self.host_ascend_lib64_path, 'common')}",
-            f"cp {self.ctr_driver_dir}/driver/host/*.ko {self.host_ko_files}",
+            f"cp {self.ctr_ko_files}/*.ko {self.host_ko_files}",
         ]
         for command in commands:
             Commands.run(command)
@@ -234,9 +278,9 @@ class Installation:
         """
         env_path = Path(f"{self.host_etc}/profile.d/ascend.sh")
         env_content = (
-            f"export LD_LIBRARY_PATH={self.host_ascend_lib64_path}/common:"
-           f"{self.host_ascend_lib64_path}/driver:$LD_LIBRARY_PATH\n"
-            f"export PATH=$PATH:{self.host_ascend_tool_path}/"
+            "export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/common:"
+           "/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH\n"
+            "export PATH=$PATH:/usr/local/Ascend/driver/tools/\n"
             )
 
         try:
@@ -249,7 +293,7 @@ class Installation:
         # add env command to bashrc
         # mount: /root/.bashrc:/host_bashrc
         bashrc_path = Path("/host_bashrc")
-        env_command = f"bash /etc/profile.d/ascend.sh\n"
+        env_command = "bash /etc/profile.d/ascend.sh\n"
         try:
             if bashrc_path.exists():
                 content = bashrc_path.read_text(encoding="utf-8")
@@ -281,7 +325,7 @@ class Installation:
                 new_lines.append(line)
 
         if not found:
-            new_lines.append(self.install_info)
+            new_lines.append(f"{prefix}=complete")
 
         with open(self.install_info, "w") as f:
             f.writelines(new_lines)
@@ -293,7 +337,7 @@ class Installation:
         updating permissions, installing kernel objects, and configuring the environment.
         """
         self.setup()
-        self.unzip_and_repack_npu()
+        self.process_npu()
         self.copy_resources()
         self.update_permissions()
         self.update_specific_func()
