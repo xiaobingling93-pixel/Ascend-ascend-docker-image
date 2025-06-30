@@ -1,0 +1,15 @@
+FROM ubuntu:20.04
+
+RUN apt update && apt install -y python3 build-essential pigz unzip findutils kmod
+
+WORKDIR /app
+
+COPY davinci.conf .
+COPY install_ko.sh .
+COPY installation.py . 
+COPY entrypoint.sh .
+
+RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/install_ko.sh
+
+CMD ["/app/entrypoint.sh"]
