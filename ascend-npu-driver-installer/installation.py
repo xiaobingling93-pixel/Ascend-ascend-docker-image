@@ -92,7 +92,7 @@ class Installation:
             self.ctr_driver_dir, 
             self.ctr_npu_unzipped_folder, 
             self.ctr_ko_files,
-            self.host_ascend_base_path, 
+            self.host_ascend_driver_path, 
             self.host_ko_files
         ]:
             if os.path.exists(path):
