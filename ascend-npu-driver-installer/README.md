@@ -71,8 +71,35 @@ docker run --privileged -it -d -v /lib:/mnt/lib -v /lib/modules:/lib/modules -v 
 ## 升级 `NPU` 驱动
 
 如果是通过驱动安装包或 [Ascend-Deopyer](https://gitee.com/ascend/ascend-deployer) 安装的驱动，则不支持使用拉起容器的方式升级。  
-如果是容器化安装的驱动，则将更新的 npu 驱动包放到挂载目录中，重新启动容器即可（需要将旧容器删除）。  
+如果是容器化安装的驱动，则将更新的 `npu` 驱动包放到挂载目录中，重新启动容器即可（需要将旧容器删除）。  
 注意：升级前，请通过 `npu-smi info` 查看是否有训练任务。
+
+## 通过 `k8s` 集群安装 `NPU` 驱动
+
+### 前置条件
+
+- 已搭建 `k8s` 集群
+- 所有的节点的 `os` 一致
+- 所有节点上，`npu` 驱动压缩包放到统一位置，建议放到下面 `/home/huawei/`
+- 当前支持 `openeuler 22.03` 和 `ubuntu 22.04`
+
+执行过程：
+
+- 将 `npu-driver-install.yaml` 中的 `ascend-npu-driver-installer:{version}` 替换为实际的镜像版本， 可以通过 `docker images | grep ascend-npu-driver-installe`r 进行查询
+- 将 `npu-driver-install.yaml` 中的 `{npu_zip_folder}` 更换为实际的 `npu` 驱动压缩包地址。
+- 如果 os 为 `ubuntu 22.04`，还需要将 `npu-driver-install.yaml` 中的
+
+```yaml
+- name: KO_COMPILE
+    value: "1"
+```
+
+value 变更成：
+
+```yaml
+- name: KO_COMPILE
+    value: "0"
+```
 
 ## Q&A
 
@@ -83,7 +110,7 @@ docker run --privileged -it -d -v /lib:/mnt/lib -v /lib/modules:/lib/modules -v 
 
 ### 安装完成之后执行 `npu-smi info` 报错
 
-请执行 `reboot` 重启，重启后还是执行报错，删除当前容器，重新启动新容器。将 "KO_COMPILE=1" 值改为 0
+请执行 `reboot` 重启，重启后还是执行报错，删除当前容器，重新启动新容器。将 `"KO_COMPILE=1"` 值改为 0
 
 ### 使用容器安装驱动后，再使用 [`Ascend-Deployer`](https://gitee.com/ascend/ascend-deployer) 安装，`npu-smi info` 报错
 

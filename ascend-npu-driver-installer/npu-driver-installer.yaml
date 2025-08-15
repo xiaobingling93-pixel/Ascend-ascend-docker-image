@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: npu-driver-installer
+  namespace: kube-system
+  labels:
+    app: npu-driver-installer
+spec:
+  selector:
+    matchLabels:
+      app: npu-driver-installer
+  template:
+    metadata:
+      labels:
+        app: npu-driver-installer
+    spec:
+      hostPID: true
+      containers:
+      - name: npu-installer
+        image: ascend-npu-driver-installer:{version} 
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        env:
+        - name: KO_COMPILE
+          value: "1"
+        volumeMounts:
+        - name: lib
+          mountPath: /mnt/lib
+        - name: lib-modules
+          mountPath: /lib/modules
+        - name: usr-src
+          mountPath: /usr/src
+        - name: usr-local
+          mountPath: /mnt/usr/local
+        - name: bashrc
+          mountPath: /host_bashrc
+        - name: etc
+          mountPath: /mnt/etc
+        - name: npu-driver-zip
+          mountPath: /app/npu_driver_zip
+      volumes:
+      - name: lib
+        hostPath:
+          path: /lib
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+      - name: usr-src
+        hostPath:
+          path: /usr/src
+      - name: usr-local
+        hostPath:
+          path: /usr/local
+      - name: bashrc
+        hostPath:
+          path: /root/.bashrc
+      - name: etc
+        hostPath:
+          path: /etc
+      - name: npu-driver-zip
+        hostPath:
+          path: {npu_zip_folder} 
+          type: Directory
+      tolerations:
+      - operator: Exists
