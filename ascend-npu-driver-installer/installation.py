@@ -207,9 +207,24 @@ class Installation:
         step 4: get ko files from self.ctr_driver_dir/driver/host
         """
         repack_npu = os.path.join(self.ctr_npu_unzipped_folder, "repack_npu")
+
+        Commands.run(f"bash {self.npu_run_file} --noexec --extract={repack_npu}")
+
+        repack_cmd = f"bash {self.npu_run_file} --repack-path={repack_npu} {repack_npu}.run"
+        logging.info(f"execute cmd: {repack_cmd}")
+        proc = subprocess.Popen(
+            repack_cmd, 
+            stdin=subprocess.PIPE, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True, 
+            shell=True)
+        user_input = f"y\n/lib/modules/{self.kernel_version}/build"
+        stdout, stderr = proc.communicate(user_input)
+        logging.info(stderr)
+        logging.info(stdout)
+
         commands = [
-            f"bash {self.npu_run_file} --noexec --extract={repack_npu}",
-            f"bash {self.npu_run_file} --repack-path={repack_npu} {repack_npu}.run",
             f"bash {repack_npu}.run --noexec --extract={self.ctr_driver_dir}",
             f"cp {self.ctr_driver_dir}/driver/host/*.ko {self.ctr_ko_files}/"
         ]
