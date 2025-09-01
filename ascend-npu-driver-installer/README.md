@@ -101,6 +101,13 @@ value 变更成：
     value: "0"
 ```
 
+## 卸载 `NPU` 驱动
+
+执行以下删除命令，对 `NPU` 驱动进行卸载：
+
+- `rm -rf /usr/local/Ascend/driver`
+- ```rm -rf /lib/modules/`uname -r`/npu_driver```
+
 ## Q&A
 
 ### 安装完成后执行 `npu-smi info` 提示命令未找到
@@ -114,25 +121,26 @@ value 变更成：
 
 ### 使用容器安装驱动后，再使用 [`Ascend-Deployer`](https://gitee.com/ascend/ascend-deployer) 安装，`npu-smi info` 报错
 
-当前不支持使用容器安装后，再通过 [`Ascend-Deployer`](https://gitee.com/ascend/ascend-deployer) 安装。可以将当前的驱动删除后，进行安装：
-
-1. `rm -rf /usr/local/Ascend/driver`
-2. ```rm -rf /lib/modules/`uname -r`/npu_driver```
+当前不支持使用容器安装后，再通过 [`Ascend-Deployer`](https://gitee.com/ascend/ascend-deployer) 安装。  
+可以将当前的驱动卸载后，进行安装， 请参考 [卸载 `NPU` 驱动](https://gitcode.com/wuqiangroy/ascend-docker-image/tree/dev/ascend-npu-driver-installer#卸载-npu-驱动) 章节进行卸载。
 
 ### 安装提示：`[INFO]Do you want to try build driver after input kernel absolute path? [y/n]:`
 
-这种情况是未安装 `kernel-dev` 和 `kernel-headers`, 安装方式：
-`debian`/`ubuntu`:
+这种情况是未安装 `kernel-dev` 和 `kernel-headers`
+
+安装方式：
+
+- `debian`/`ubuntu`:
 
 ```shell
 sudo apt update
 sudo apt install -y linux-headers-$(uname -r)
 ```
 
-`openeuler`/`euler`/`ctyunos`/`bclinux`/`centos`:
+- `openeuler`/`euler`/`ctyunos`/`bclinux`/`centos`:
 
 ```shell
-sudo yum install -y kernel-devel-$(uname -r) linux-headers-$(uname -r)
+sudo yum install -y kernel-devel-$(uname -r) kernel-headers-$(uname -r)
 ```
 
 ### 安装 `linux-headers` 和 `linux-dev` 之后还是安装 `NPU` 驱动失败
