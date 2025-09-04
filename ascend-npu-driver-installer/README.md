@@ -27,7 +27,7 @@
 ## 启动容器进行 `NPU` 驱动安装
 
 ```docker
-docker run --privileged -it -d -v /lib:/mnt/lib -v /lib/modules:/lib/modules -v /usr/src:/usr/src -v /usr/local:/mnt/usr/local -v /root/.bashrc:/host_bashrc -v /etc:/mnt/etc -v {npu_zip_folder}:/app/npu_driver_zip -e "KO_COMPILE=1" --name npu-installer-container ascend-npu-driver-installer:{version}
+docker run --privileged -it -d -v /lib:/mnt/lib -v /lib/modules:/lib/modules -v /usr/src:/usr/src -v /usr/local:/mnt/usr/local -v /root/.bashrc:/host_bashrc -v /etc:/mnt/etc -v /etc/os-release:/host-os-release -v {npu_zip_folder}:/app/npu_driver_zip -e "KO_COMPILE=1" --name npu-installer-container ascend-npu-driver-installer:{version}
 ```
 
 启动命令详解：
@@ -35,12 +35,13 @@ docker run --privileged -it -d -v /lib:/mnt/lib -v /lib/modules:/lib/modules -v 
 命令 | 作用
 -- | --
 `--privileged` | 特权容器，容器安装驱动必须要
-`-v /lib:/mnt/li`b | 将宿主机 `/lib` 挂载到容器中 `/mnt/lib` 中
+`-v /lib:/mnt/lib` | 将宿主机 `/lib` 挂载到容器中 `/mnt/lib` 中
 `-v /lib/modules:/lib/modules`  | 将宿主机 `/lib/modules` 挂载到容器 `/lib/modules` 中，用于安装和编译 ko 文件
 `-v /usr/src:/usr/src` | 将宿主机 `/usr/src` 挂载到容器 `/usr/src` 中，实际的 `kernel` 映射地址
 `-v /usr/local:/mnt/usr/local`  | 将宿主机 `/usr/local` 挂载到容器 `/mnt/usr/local` 中，驱动的相关数据会放到这里
 `-v /root/.bashrc:/host_bashrc` | 将宿主机 `/root/.bashrc` 挂载到容器 `/host_bashrc` 中，添加启动项，用于激活 `npu-smi` 等命令
 `-v /etc:/mnt/etc` | 将宿主机 /etc 挂载到容器 /mnt/etc 中，部分 `NPU` 参数会放到这里
+`-v /etc/os-release:/host-os-release` | 将宿主机的系统信息挂载到容器中，供容器查询
 `-v {npu_zip_folder}:/app/npu_driver_zip` | 将宿主机中 `NPU` 驱动 `zip` 包挂载到容器 `/app/npu_driver_zip` 中，处理驱动信息
 `-e "KO_COMPILE=1"` | 环境变量，1 则通过 `make` 编译的方式编译 `ko` 文件，其他则是通过 `repack` 的方式获取 `ko`
 
@@ -124,7 +125,7 @@ value 变更成：
 当前不支持使用容器安装后，再通过 [`Ascend-Deployer`](https://gitee.com/ascend/ascend-deployer) 安装。  
 可以将当前的驱动卸载后，进行安装， 请参考 [卸载 `NPU` 驱动](https://gitcode.com/wuqiangroy/ascend-docker-image/tree/dev/ascend-npu-driver-installer#卸载-npu-驱动) 章节进行卸载。
 
-### 安装提示：`[INFO]Do you want to try build driver after input kernel absolute path? [y/n]:`
+### 安装提示：`FileNotFoundError: /lib/modules/$(uname -r)/build does not exist, please ensure the kernel headers are installed`
 
 这种情况是未安装 `kernel-dev` 和 `kernel-headers`
 
