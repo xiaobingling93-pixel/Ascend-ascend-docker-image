@@ -37,6 +37,9 @@ spec:
           mountPath: /host_bashrc
         - name: etc
           mountPath: /mnt/etc
+        - name: os-release
+          mountPath: /host-os-release
+          readOnly: true
         - name: npu-driver-zip
           mountPath: /app/npu_driver_zip
       volumes:
@@ -58,6 +61,10 @@ spec:
       - name: etc
         hostPath:
           path: /etc
+      - name: os-release
+        hostPath:
+          path: /etc/os-release
+          type: File
       - name: npu-driver-zip
         hostPath:
           path: {npu_zip_folder} 

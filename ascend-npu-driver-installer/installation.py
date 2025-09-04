@@ -16,21 +16,53 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 # ===========================================================================
 
+import json
 import glob
 import os
 from pathlib import Path
+import platform
 import re
 import shutil
 import subprocess
-from typing import List
+from typing import List, Tuple
 import logging
 import zipfile
+
+# constants for container
+CTR_WORKING_DIR = "/app"
+
+# constants for host
+HOST_OS_RELEASE = "/host-os-release"
+HOST_ETC = "/mnt/etc"
+# mount lib of host to container: -v /lib:/mnt/lib
+# avoid some protential issues
+HOST_LIB = "/mnt/lib"
+HOST_ASCEND_DIR = "/mnt/usr/local/Ascend"
+
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
+
+def get_os_info() -> Tuple[str, str]:
+    os_name, os_version = "", ""
+    try: 
+        with open(HOST_OS_RELEASE, "r", encoding="utf-8") as f: 
+            for line in f: 
+                if line.startswith("NAME="): 
+                    os_name = line.split("=")[1].strip().strip('"') 
+                elif line.startswith("VERSION_ID="): 
+                    os_version = line.split("=")[1].strip().strip('"') 
+    except Exception as e: 
+        raise RuntimeError(f"Failed to read OS information: {e}") from e
+    return os_name, os_version
+
+# constants for os info
+OS_NAME, OS_VERSION = get_os_info()
+ARCH = platform.machine()
+KERNEL_VERSION = platform.release()
 
 
 class Commands:
@@ -44,65 +76,229 @@ class Commands:
         :param command: The command to execute.
         :return: The output of the command.
         """
-        logging.info(f"Executing command: {command}")
+        logging.info("Executing command: %s", command)
         result = subprocess.run(command, check=True, shell=True)
         if result.returncode != 0:
             raise RuntimeError(
                 f"Command '{command}' failed with return code {result.returncode}. "
-                f"Output: {result.stdout.strip()}, Error: {result.stderr.strip() if result.stderr else ''}"
+                f"Output: {result.stdout.strip()}, "
+                f"Error: {result.stderr.strip() if result.stderr else ''}"
             )
-    
 
-class Installation:
+
+class Base:
+    """ A base class for installation handling."""
+
+    def __init__(self):
+        self.using_ko_compile = os.getenv("KO_COMPILE", "0")
+
+        # dir in container
+        self.ctr_npu_zip_dir = os.path.join(CTR_WORKING_DIR, "npu_driver_zip")
+        self.ctr_npu_pattern = "*-*-npu_*.zip"
+        self.ctr_npu_unzipped_folder = os.path.join(
+            CTR_WORKING_DIR, "npu_unzipped_driver")
+        self.ctr_driver_dir = os.path.join(CTR_WORKING_DIR, "npu_driver")
+        self.ctr_ko_files = os.path.join(CTR_WORKING_DIR, "ko_files")
+        self.ctr_precompiled_ko_files = os.path.join(
+            CTR_WORKING_DIR, 
+            "precompiled-ko-files", 
+            OS_NAME, 
+            OS_VERSION, 
+            ARCH
+        )
+
+        # dir in host
+        self.host_ascend_driver_path = os.path.join(
+            HOST_ASCEND_DIR, "driver")
+        self.host_ascend_tool_path = os.path.join(
+            self.host_ascend_driver_path, "tools")
+        self.host_ascend_lib64_path = os.path.join(
+            self.host_ascend_driver_path, "lib64")
+        self.host_kernel_path = f"/lib/modules/{KERNEL_VERSION}/build"
+        self.host_ko_files = f"/lib/modules/{KERNEL_VERSION}/npu_driver"
+        self.install_info = os.path.join(HOST_ETC, "ascend_install.info") 
+
+        self.pre_check()
+
+    def find_file(self, pattern: str) -> str:
+        """
+        Find a file matching the given pattern.
+        :param pattern: The pattern to search for.
+        :return: The path of the found file.
+        """
+        matches = glob.glob(pattern)
+        if not matches:
+            raise FileNotFoundError(f"No file matching pattern '{pattern}' found")
+        return matches[0]
+
+    def pre_check(self):
+        """
+        Pre-check the environment before installation.
+        """
+        if not os.path.exists(self.host_kernel_path):
+            raise FileNotFoundError(
+                f"{self.host_kernel_path} does not exist, please ensure the kernel headers are installed")
+        logging.info("Pre-check successfully")
+
+class NpuProcessor(Base):
+    """ A class to handle NPU driver processing operations.
+    """
+    FILE_NAME = "os_version.json"
+    DEFAULT_PATH = "/app"
+
+    @staticmethod
+    def read_json() -> dict:
+        """
+        Read a JSON file and return its content as a dictionary.
+        :param file_path: The path to the JSON file.
+        :return: A dictionary containing the JSON content.
+        """
+        file_path = os.path.join(
+            NpuProcessor.DEFAULT_PATH, NpuProcessor.FILE_NAME)
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                return json.load(file)
+        except Exception as e:
+            raise RuntimeError(f"Failed to read JSON file {file_path}: {e}") from e
+
+    def _compile_ko_files(self, npu_run_file: str):
+        Commands.run(f"bash {npu_run_file} --noexec --extract={self.ctr_driver_dir}")
+        kernel_path = os.path.join(self.ctr_driver_dir, "driver", "kernel")
+        makefile = self.find_file(os.path.join(kernel_path, "Makefile_*"))
+        dkms_conf = self.find_file(os.path.join(kernel_path, "dkms_*.conf"))
+        logging.info("Found makefile: %s, dkms_conf: %s", makefile, dkms_conf)
+
+        os.chdir(f"{self.ctr_driver_dir}/driver/kernel")
+        origin_make = ""
+        try:
+            with open(dkms_conf, "r", encoding="utf-8") as file:
+                content = file.read()
+            for line in content.splitlines():
+                if line.startswith("MAKE[0]"):
+                    origin_make = line.split("MAKE[0]=")[1].strip()
+        except Exception as e:
+            raise RuntimeError(f"Failed to read {dkms_conf}: {e}") from e
+        origin_make = origin_make.strip("\"").replace("KERNEL_UNAME=${kernelver}", "")
+        commands = [
+            f"cp {makefile} {kernel_path}/Makefile",
+            origin_make,
+            f"find . -type f -name '*.ko' -exec cp {{}} {self.ctr_ko_files} \\;",
+        ]
+        for command in commands:
+            Commands.run(command)
+        logging.info("Unzip NPU file and compile ko files: %s successfully",  self.ctr_driver_dir)
+    
+    def _repack_npu(self, npu_run_file: str):
+        """
+        step 1: extract *.run to temp
+        step 2: repack temp
+        step 3: extract temp-custom.run
+        step 4: get ko files from self.ctr_driver_dir/driver/host
+        """
+        repack_npu = os.path.join(self.ctr_npu_unzipped_folder, "repack_npu")
+
+        Commands.run(f"bash {npu_run_file} --noexec --extract={repack_npu}")
+
+        repack_cmd = f"bash {npu_run_file} --repack-path={repack_npu} {repack_npu}.run"
+        logging.info(f"execute cmd: {repack_cmd}")
+        proc = subprocess.Popen(
+            repack_cmd, 
+            stdin=subprocess.PIPE, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True, 
+            shell=True)
+        user_input = f"y\n{self.host_kernel_path}"
+        stdout, stderr = proc.communicate(user_input)
+        logging.info(stderr)
+        logging.info(stdout)
+
+        commands = [
+            f"bash {repack_npu}.run --noexec --extract={self.ctr_driver_dir}",
+            f"cp {self.ctr_driver_dir}/driver/host/*.ko {self.ctr_ko_files}/"
+        ]
+        for command in commands:
+            Commands.run(command)
+        logging.info(f"Unzipped and repack NPU file: {npu_run_file} successfully")
+    
+    def unzip_npu_driver(self) -> Tuple[str, str]:
+        """ Unzip the NPU driver zip file and extract the .run file.
+        :return: A tuple containing the NPU name without extension and the path to the .run file.
+        """
+        outer_zip = self.find_file(os.path.join(
+            self.ctr_npu_zip_dir, self.ctr_npu_pattern))
+        logging.info("Detected NPU driver zip package: %s", outer_zip)
+
+        with zipfile.ZipFile(outer_zip, 'r') as zip1:
+            zip1.extractall(self.ctr_npu_unzipped_folder)
+
+        inner_zip = self.find_file(os.path.join(
+            self.ctr_npu_unzipped_folder, self.ctr_npu_pattern))
+        with zipfile.ZipFile(inner_zip, 'r') as zip2:
+            zip2.extractall(self.ctr_npu_unzipped_folder)
+
+        # query npu run file, like: Ascend-hdk-910-npu-driver_25.2.0_linux-x86-64.run
+        run_file = self.find_file(
+            os.path.join(self.ctr_npu_unzipped_folder, '*-npu-driver_*.run'))
+        npu_name = Path(outer_zip)
+        npu_name_without_extension = npu_name.stem
+        logging.info("Unzipped NPU driver package:%s successfully, got run file: %s", outer_zip, run_file)
+        return npu_name_without_extension, run_file
+
+    def process_ko(self, npu_version: str, npu_run_file: str):
+        """ Copy compiled .ko files to the container directory.
+        """
+        # An example of precompiled ko files path:
+        # /app/precompiled-ko-files/openEuler/22.03/aarch64/5.10.0-60.18.0.50.oe2203.aarch64/npu_version
+        src_path = os.path.join(self.ctr_precompiled_ko_files, KERNEL_VERSION, npu_version)
+        if os.path.exists(src_path):
+            logging.info("Find precompiled ko files: %s, No need to compile ko files", src_path)
+            commands = [
+                    f"cp {src_path}/*.ko {self.ctr_ko_files}/",
+                    f"bash {npu_run_file} --noexec --extract={self.ctr_driver_dir}"
+                ]
+            for command in commands:
+                Commands.run(command)
+            logging.info(
+                "Copied precompiled .ko files to container directory: %s successfully", 
+                self.ctr_ko_files,
+            )
+            return
+        
+        logging.info("Precompiled .ko files not found in %s, start to compile from source", src_path)
+        if self.using_ko_compile == "1":
+            logging.info("ENV: KO_COMPILE=%s, compile ko files.", self.using_ko_compile)
+            self._compile_ko_files(npu_run_file)
+        else:
+            logging.info("ENV: KO_COMPILE=%s, repack npu files.", self.using_ko_compile)
+            self._repack_npu(npu_run_file)
+
+
+class Installation(Base):
     """
     A class to handle the installation of NPU drivers in a container environment.
     """
-
-    def __init__(self):
-
-        self.using_ko_compile = os.getenv("KO_COMPILE", "0")
-        
-        # dir in container
-        self.ctr_working_dir = "/app"
-        self.ctr_npu_zip_dir = os.path.join(self.ctr_working_dir, "npu_driver_zip")
-        self.ctr_npu_pattern = "*-*-npu_*.zip"
-        self.ctr_npu_run_file = None
-        self.ctr_npu_unzipped_folder = os.path.join(self.ctr_working_dir, "npu_unzipped_driver")
-        self.ctr_driver_dir = os.path.join(self.ctr_working_dir, "npu_driver")
-        self.ctr_ko_files = os.path.join(self.ctr_working_dir, "ko_files")
-
-        # dir in host
-        self.host_ascend_base_path = "/mnt/usr/local/Ascend"
-        self.host_ascend_driver_path = os.path.join(self.host_ascend_base_path, "driver")
-        self.host_ascend_tool_path = os.path.join(self.host_ascend_driver_path, "tools")
-        self.host_ascend_lib64_path = os.path.join(self.host_ascend_driver_path, "lib64")
-        self.kernel_version = os.uname().release
-        self.host_ko_files = f"/lib/modules/{self.kernel_version}/npu_driver"
-        # mount lib of host to container: -v /lib:/mnt/lib
-        # avoid some protential issues
-        self.host_mnt_lib = "/mnt/lib"
-        self.host_etc = "/mnt/etc"
-        self.install_info = os.path.join(self.host_etc, "ascend_install.info")
 
     def _clear(self):
         """
         Clear the working directory by removing all files and subdirectories.
         """
         for path in [
-            self.ctr_driver_dir, 
-            self.ctr_npu_unzipped_folder, 
+            self.ctr_driver_dir,
+            self.ctr_npu_unzipped_folder,
             self.ctr_ko_files,
-            self.host_ascend_driver_path, 
+            self.host_ascend_driver_path,
             self.host_ko_files
         ]:
             if os.path.exists(path):
-                logging.info(f"Removing existing directory: {path}")
+                logging.info("Removing existing directory: %s", path)
                 shutil.rmtree(path)
 
     def _make_file_executable(self):
         command = f"chmod +x {self.host_ascend_tool_path}/*"
         Commands.run(command)
-        logging.info(f"Make all the file in {self.host_ascend_tool_path} to executable successfully.")
+        logging.info("Make all the file in %s to executable successfully",
+                     self.host_ascend_tool_path)
 
     @staticmethod
     def _extract_array(content: str, key: str) -> List[str]:
@@ -115,40 +311,16 @@ class Installation:
         pattern = rf"{key}=\((.*?)\)"
         match = re.search(pattern, content, re.DOTALL)
         if not match:
-            raise ValueError(f"Key '{key}' not found in content.")
+            raise ValueError(f"Key '{key}' not found in content")
         return match.group(1).strip().split()
-        
-    def _unzip_npu_driver(self):
-        pattern = os.path.join(self.ctr_npu_zip_dir, self.ctr_npu_pattern)
-        matches = glob.glob(pattern)
-        if not matches:
-            raise FileNotFoundError("No NPU driver zip file matching pattern found.")
-        outer_zip = matches[0]
-        logging.info(f"Detected NPU driver zip package: {outer_zip}")
 
-        with zipfile.ZipFile(outer_zip, 'r') as zip1:
-            zip1.extractall(self.ctr_npu_unzipped_folder)
-
-        inner_zips = glob.glob(os.path.join(self.ctr_npu_unzipped_folder, self.ctr_npu_pattern))
-        if not inner_zips:
-            raise FileNotFoundError("No NPU driver zip file matching pattern found.")
-        inner_zip = inner_zips[0]
-        with zipfile.ZipFile(inner_zip, 'r') as zip2:
-            zip2.extractall(self.ctr_npu_unzipped_folder)
-
-        # 查找 .run 文件
-        run_files = glob.glob(os.path.join(self.ctr_npu_unzipped_folder, '*-npu-driver_*.run'))
-        if not run_files:
-            raise FileNotFoundError("No npu driver .run file found in extracted content.")
-        self.npu_run_file = run_files[0]
-    
     def setup(self):
         """
         Setup the installation environment
         """
         self._clear()
         paths = [
-            self.host_ascend_base_path,
+            HOST_ASCEND_DIR,
             os.path.join(self.host_ascend_lib64_path, "common"),
             self.ctr_ko_files,
             self.host_ko_files
@@ -156,110 +328,40 @@ class Installation:
 
         for path in paths:
             os.makedirs(path, exist_ok=True)
-            logging.info(f"Created directory: {path}")
-        logging.info("Setup completed successfully.")
-
-    def process_npu(self):
-        self._unzip_npu_driver()
-        if self.using_ko_compile == "1":
-            logging.info(f"ENV: KO_COMPILE={self.using_ko_compile}, compile ko files.")
-            self._compile_ko_files()
-        else:
-            logging.info(f"ENV: KO_COMPILE={self.using_ko_compile}, repack npu files.")
-            self._repack_npu()
-
-    def _compile_ko_files(self):
-        Commands.run(f"bash {self.npu_run_file} --noexec --extract={self.ctr_driver_dir}")
-        kernel_path = os.path.join(self.ctr_driver_dir, "driver", "kernel")
-        
-        makefile = os.path.join(kernel_path, "Makefile_milan")
-        if not os.path.exists(makefile):
-            makefile = os.path.join(kernel_path, "Makefile_mini1910p")
-        dkms_conf = os.path.join(kernel_path, "dkms_milan.conf")
-        if not os.path.exists(dkms_conf):
-            dkms_conf =  os.path.join(kernel_path, "dkms_mini1910p.conf")
-
-        os.chdir(f"{self.ctr_driver_dir}/driver/kernel")
-        origin_make = ""
-        try:
-            with open(dkms_conf, "r", encoding="utf-8") as file:
-                content = file.read()
-            for line in content.splitlines():
-                if line.startswith("MAKE[0]"):
-                    origin_make = line.split("MAKE[0]=")[1].strip()
-        except Exception as e:
-            raise RuntimeError(f"Failed to read dkms_milan.conf: {e}") from e
-        origin_make = origin_make.strip("\"").replace("KERNEL_UNAME=${kernelver}", "")
-        commands = [
-            f"cp {makefile} {kernel_path}/Makefile",
-            origin_make,
-            f"find . -type f -name '*.ko' -exec cp {{}} {self.ctr_ko_files} \\;",
-        ]
-        for command in commands:
-            Commands.run(command)
-        logging.info(f"Unzip NPU file and compile ko files: {self.ctr_driver_dir} successfully.")
-
-    def _repack_npu(self):
-        """
-        step 1: extract *.run to temp
-        step 2: repack temp
-        step 3: extract temp-custom.run
-        step 4: get ko files from self.ctr_driver_dir/driver/host
-        """
-        repack_npu = os.path.join(self.ctr_npu_unzipped_folder, "repack_npu")
-
-        Commands.run(f"bash {self.npu_run_file} --noexec --extract={repack_npu}")
-
-        repack_cmd = f"bash {self.npu_run_file} --repack-path={repack_npu} {repack_npu}.run"
-        logging.info(f"execute cmd: {repack_cmd}")
-        proc = subprocess.Popen(
-            repack_cmd, 
-            stdin=subprocess.PIPE, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, 
-            text=True, 
-            shell=True)
-        user_input = f"y\n/lib/modules/{self.kernel_version}/build"
-        stdout, stderr = proc.communicate(user_input)
-        logging.info(stderr)
-        logging.info(stdout)
-
-        commands = [
-            f"bash {repack_npu}.run --noexec --extract={self.ctr_driver_dir}",
-            f"cp {self.ctr_driver_dir}/driver/host/*.ko {self.ctr_ko_files}/"
-        ]
-        for command in commands:
-            Commands.run(command)
-        logging.info(f"Unzipped and repack NPU file: {self.npu_run_file} successfully.")
+            logging.info("Created directory: %s", path)
+        logging.info("Setup successfully")
 
     def copy_resources(self):
         """
         Copy necessary resources for installation.
         """
         commands = [
-            f"cp -r {self.ctr_driver_dir}/driver {self.host_ascend_base_path}",
-            f"cp -r /app/davinci.conf {self.host_mnt_lib}",
-            f"cp -r {self.host_ascend_driver_path}/script/dms_events_conf.lst {self.host_etc}",
-            f"cp {self.host_ascend_lib64_path}/*.so {os.path.join(self.host_ascend_lib64_path, 'common')}",
+            f"cp -r {self.ctr_driver_dir}/driver {HOST_ASCEND_DIR}",
+            f"cp -r /app/davinci.conf {HOST_LIB}",
+            f"cp -r {self.host_ascend_driver_path}/script/dms_events_conf.lst {HOST_ETC}",
+            f"cp {self.host_ascend_lib64_path}/*.so '{self.host_ascend_lib64_path}/common'",
             f"cp {self.ctr_ko_files}/*.ko {self.host_ko_files}",
         ]
         for command in commands:
             Commands.run(command)
-        logging.info("Resources copied successfully.")
+        logging.info("Resources copied successfully")
 
     def update_permissions(self):
         """
         Update permissions for the copied resources.
         """
         commands = [
-            f"chmod 777 {os.path.join(self.host_mnt_lib, 'davinci.conf')}",
-            f"chmod 777 {self.host_etc}/dms_events_conf.lst"
+            f"chmod 777 {os.path.join(HOST_LIB, 'davinci.conf')}",
+            f"chmod 777 {os.path.join(HOST_ETC, 'dms_events_conf.lst')}"
         ]
         for command in commands:
             Commands.run(command)
-        logging.info("Permission updated successfully.")
+        logging.info("Permission updated successfully")
 
     def update_specific_func(self):
+        """
+        update the spcific_func.inc file to rename some files
+        """
         target_dir = os.path.join(self.host_ascend_driver_path, "device")
         specific_func_file = f"{self.host_ascend_driver_path}/script/specific_func.inc"
 
@@ -270,7 +372,8 @@ class Installation:
         dst_names = self._extract_array(content, "dst_names")
 
         if len(src_names) != len(dst_names):
-            raise ValueError("The number of source names and destination names do not match.")
+            raise ValueError("The number of source names and destination names do not match")
+        
         for (i, src) in enumerate(src_names):
             src_file = f"{target_dir}/{src}"
             dst_file = f"{target_dir}/{dst_names[i]}"
@@ -279,32 +382,34 @@ class Installation:
                 raise FileNotFoundError(f"Source file '{src_file}' does not exist.")
 
             Commands.run(f"mv {src_file} {dst_file}")
-            logging.info(f"Renaming {src_file} to {dst_file} successfully.")
-    
+            logging.info("Renaming %s to %s successfully", src_file, dst_file)
+
     @staticmethod
     def install_ko():
+        """ Install kernel object files using the provided script.
+        """
         command = "bash /app/install_ko.sh"
         Commands.run(command)
-        logging.info(f"Installed ko files successfully.")
+        logging.info("Installed ko files successfully")
 
     def configure_env(self):
         """
         Configure the environment for the installation.
         """
-        env_path = Path(f"{self.host_etc}/profile.d/ascend.sh")
+        env_path = Path(f"{HOST_ETC}/profile.d/ascend.sh")
         env_content = (
             "export LD_LIBRARY_PATH=/usr/local/Ascend/driver/lib64/common:"
-           "/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH\n"
+            "/usr/local/Ascend/driver/lib64/driver:$LD_LIBRARY_PATH\n"
             "export PATH=$PATH:/usr/local/Ascend/driver/tools/\n"
-            )
+        )
 
         try:
             with env_path.open("w", encoding="utf-8") as env_file:
                 env_file.write(env_content)
-            logging.info("Environment configured successfully.")
+            logging.info("Environment configured successfully")
         except Exception as e:
             raise RuntimeError(f"Failed to configure environment: {e}") from e
-        
+
         # add env command to bashrc
         # mount: /root/.bashrc:/host_bashrc
         bashrc_path = Path("/host_bashrc")
@@ -324,10 +429,10 @@ class Installation:
         """
         prefix = "Driver_Install_Status"
         if not os.path.exists(self.install_info):
-            with open(self.install_info, "w") as f:
+            with open(self.install_info, "w", encoding="utf-8") as f:
                 f.write(f"{prefix}=complete")
-            return 
-        with open(self.install_info, "r") as f:
+            return
+        with open(self.install_info, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         new_lines = []
@@ -342,17 +447,23 @@ class Installation:
         if not found:
             new_lines.append(f"{prefix}=complete")
 
-        with open(self.install_info, "w") as f:
+        with open(self.install_info, "w", encoding="utf-8") as f:
             f.writelines(new_lines)
-        logging.info(f"Write install complete info to {self.install_info} successfully.")
+        logging.info("Write install complete info to %s successfully", self.install_info)
 
     def install(self):
         """
-        Main installation method that orchestrates the setup, copying of resources,
-        updating permissions, installing kernel objects, and configuring the environment.
+        Main installation including following methods: 
+        - orchestrates the setup
+        - copying of resources,
+        - updating permissions
+        - installing kernel objects
+        - configuring the environment.
         """
+        npu_processor = NpuProcessor()
         self.setup()
-        self.process_npu()
+        npu_name, npu_run_file = npu_processor.unzip_npu_driver()
+        npu_processor.process_ko(npu_name, npu_run_file)
         self.copy_resources()
         self.update_permissions()
         self.update_specific_func()
@@ -360,7 +471,8 @@ class Installation:
         self.configure_env()
         self.write_complete_signal()
 
+
 if __name__ == "__main__":
     installer = Installation()
     installer.install()
-    logging.info("NPU driver installed successfully.")
+    logging.info("NPU driver installed successfully")
