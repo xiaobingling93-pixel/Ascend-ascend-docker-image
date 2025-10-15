@@ -235,7 +235,9 @@ docker build \
 
 ## 启动容器
 ### 启动命令
-如果您使用的是root用户镜像（例如从Ascend Hub上取得），并且可以使用特权容器，请使用以下命令启动容器：
+如果您在开发环境中，使用的是root用户镜像（例如从Ascend Hub上取得），并且可以使用特权容器，请使用以下命令启动容器。
+
+**说明：`--privileged` 仅用于开发环境，不能用于生产环境，否则有容器逃逸等安全风险。**
 ```sh
 docker run -it -d --net=host --shm-size=1g \
     --privileged \
@@ -273,7 +275,7 @@ docker run -it -d --net=host --shm-size=1g \
 >
 > 2. 设定容器名称`--name`与镜像名称，例如`mindie:1.0.0-800I-A2-py311-openeuler24.03-lts`。
 >
-> 3. 如果不使用`--priviliged`参数，则需要设置各设备，包括设置想要使用的卡号`--device`：
+> 3. 当不使用`--priviliged`参数时，可通过`--device`参数将主机容器暴露给容器，例如设置NPU卡管理设备和NPU卡设备：
 >       ```sh
 >       ...
 >       --name <container-name> \
