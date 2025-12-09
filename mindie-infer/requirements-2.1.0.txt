@@ -12,7 +12,9 @@ annotated-types==0.7.0
     # via pydantic
 attrs==24.2.0
     # via jsonlines
-brotli==1.1.0
+scrapy==2.13.4
+    # via brotli
+brotli==1.2.0
     # via geventhttpclient
 certifi==2024.8.30
     # via
@@ -228,7 +230,7 @@ tqdm==4.66.5
     #   icetk
     #   nltk
     #   transformers
-transformers==4.44.0
+transformers==4.53.0
     # via -r requirements.in
 tritonclient[grpc]==2.49.0
     # via -r requirements.in
