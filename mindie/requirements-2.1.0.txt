@@ -200,7 +200,7 @@ torch==2.1.0
     #   torchvision
 torchvision==0.16.0
     # via icetk
-tornado==6.4.1
+tornado==6.5.3
     # via -r requirements.in
 tqdm==4.66.5
     # via
