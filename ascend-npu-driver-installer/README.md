@@ -69,11 +69,27 @@ docker run --privileged -it -d -v /lib:/mnt/lib -v /lib/modules:/lib/modules -v 
 `Ubuntu 22.04` | `ascend-npu-driver-installer:openeuler-22.03`
 `CTYunOS 23.01` | `ascend-npu-driver-installer:openeuler-22.03`
 
-## 升级 `NPU` 驱动
+## 升级或降级 `NPU` 驱动
 
-如果是通过驱动安装包或 [Ascend-Deopyer](https://gitee.com/ascend/ascend-deployer) 安装的驱动，则不支持使用拉起容器的方式升级。  
-如果是容器化安装的驱动，则将更新的 `npu` 驱动包放到挂载目录中，重新启动容器即可（需要将旧容器删除）。  
-注意：升级前，请通过 `npu-smi info` 查看是否有训练任务。
+提醒：升级前，请通过 `npu-smi info` 查看是否有训练任务。
+
+### 卸载驱动
+
+通过驱动安装包或者使用 [Ascend-Deopyer](https://gitee.com/ascend/ascend-deployer) 安装的驱动，都需要先卸载驱动。  
+卸载方式如下：
+- 在软件包所在路径执行以下命令进行卸载：  
+```./Ascend-hdk-310b-npu-driver_x.x.x_linux-{arch}.run --uninstall```  
+若出现如下关键回显信息，则表示驱动卸载成功。  
+```Driver package uninstalled successfully!```
+
+使用容器化安装 `NPU` 驱动，需按照[卸载 `NPU` 驱动]章节进行卸载。
+
+### 重启服务器
+卸载完成之后，务必进行重启操作，以确保当前操作系统中无正在运行的 `KO` 内核文件。
+
+### 重新安装驱动
+将新的驱动安装包放置到驱动挂载目录，按照 [启动容器进行 `NPU` 驱动安装] 重新启动容器。
+注意：如果之前已经启动过容器，需要将旧容器删除，避免出现同名容器导致新容器无法拉起。
 
 ## 通过 `k8s` 集群安装 `NPU` 驱动
 

@@ -146,6 +146,11 @@ class NpuProcessor(Base):
     FILE_NAME = "os_version.json"
     DEFAULT_PATH = "/app"
 
+    def __init__(self, force_compile: bool=False):
+        super().__init__()
+        self.force_compile = force_compile
+        self.using_precompiled_ko = False
+
     @staticmethod
     def read_json() -> dict:
         """
@@ -251,7 +256,8 @@ class NpuProcessor(Base):
         # An example of precompiled ko files path:
         # /app/precompiled-ko-files/openEuler/22.03/aarch64/5.10.0-60.18.0.50.oe2203.aarch64/npu_version
         src_path = os.path.join(self.ctr_precompiled_ko_files, KERNEL_VERSION, npu_version)
-        if os.path.exists(src_path):
+        if os.path.exists(src_path) and not self.force_compile:
+            self.using_precompiled_ko = True
             logging.info("Find precompiled ko files: %s, No need to compile ko files", src_path)
             commands = [
                     f"cp {src_path}/*.ko {self.ctr_ko_files}/",
@@ -264,14 +270,16 @@ class NpuProcessor(Base):
                 self.ctr_ko_files,
             )
             return
-        
-        logging.info("Precompiled .ko files not found in %s, start to compile from source", src_path)
+        logging.info("start to compile from source")
         if self.using_ko_compile == "1":
             logging.info("ENV: KO_COMPILE=%s, compile ko files.", self.using_ko_compile)
             self._compile_ko_files(npu_run_file)
         else:
             logging.info("ENV: KO_COMPILE=%s, repack npu files.", self.using_ko_compile)
             self._repack_npu(npu_run_file)
+
+    def is_using_precompiled_ko(self) -> bool:
+        return self.using_precompiled_ko
 
 
 class Installation(Base):
@@ -385,12 +393,17 @@ class Installation(Base):
             logging.info("Renaming %s to %s successfully", src_file, dst_file)
 
     @staticmethod
-    def install_ko():
+    def install_ko() -> bool:
         """ Install kernel object files using the provided script.
         """
         command = "bash /app/install_ko.sh"
-        Commands.run(command)
-        logging.info("Installed ko files successfully")
+        try:
+            Commands.run(command)
+            logging.info("Installed ko files successfully")
+            return True
+        except Exception as e:
+            logging.info(f"Installed ko files failed: {str(e)}")
+            return False
 
     def configure_env(self):
         """
@@ -460,14 +473,22 @@ class Installation(Base):
         - installing kernel objects
         - configuring the environment.
         """
-        npu_processor = NpuProcessor()
-        self.setup()
-        npu_name, npu_run_file = npu_processor.unzip_npu_driver()
-        npu_processor.process_ko(npu_name, npu_run_file)
-        self.copy_resources()
-        self.update_permissions()
-        self.update_specific_func()
-        self.install_ko()
+        retry = 1
+        force_compile = os.getenv("FORCE_COMPILE", False)
+        while retry <= 2:
+            npu_processor = NpuProcessor(force_compile)
+            self.setup()
+            npu_name, npu_run_file = npu_processor.unzip_npu_driver()
+            npu_processor.process_ko(npu_name, npu_run_file)
+            self.copy_resources()
+            self.update_permissions()
+            self.update_specific_func()
+            if not self.install_ko() and npu_processor.is_using_precompiled_ko():
+                logging.info("Install the precompiled ko failed, try to build ko from source and install again")
+                force_compile = True
+                retry+=1
+                continue
+            break
         self.configure_env()
         self.write_complete_signal()
 
