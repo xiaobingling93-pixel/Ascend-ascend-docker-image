@@ -1,4 +1,4 @@
-  version=v6.0.RC3
+  version=v7.3.0
 
   docker manifest create --insecure swr.cn-east-3.myhuaweicloud.com/ascendhub-test/resilience-controller:${version}  \
   swr.cn-east-3.myhuaweicloud.com/ascendhub-test/resilience-controller:${version}-arm64 \
