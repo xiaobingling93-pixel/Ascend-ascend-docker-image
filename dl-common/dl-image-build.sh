@@ -14,28 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-version=6.0.RC3
+version=7.3.0
 root_dir=$(pwd $0)
 arch=$(arch)
+
+if [[ ${arch} == "x86_64" ]];then
+  ARCH=x86
+  base_image=swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/ubuntu:22.04
+else
+  ARCH=arm64
+  base_image=swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/ubuntu:22.04-linuxarm64
+fi
+
+if [[ ${arch} == "x86_64" ]];then
+  ARCH=x86
+  alpine_image=swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/alpine:latest
+else
+  ARCH=arm64
+  alpine_image=swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/alpine:latest-linuxarm64
+fi
 
 build_resilience_controller(){
   cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-resilience-controller_${version}_linux-${arch}.zip -d resilience-controller
   cd ${root_dir}/resilience-controller || exit 1
+  sed -i "s@ubuntu:22.04@${base_image}@g" Dockerfile
   docker build --no-cache -t resilience-controller:v${version} ./
-}
-
-build_hccl_controller(){
-  cd ${root_dir} ||  exit 1
-  unzip Ascend-mindxdl-hccl-controller_${version}_linux-${arch}.zip -d hccl-controller
-  cd ${root_dir}/hccl-controller || exit 1
-  docker build --no-cache -t hccl-controller:v${version} ./
 }
 
 build_noded(){
   cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-noded_${version}_linux-${arch}.zip -d ascend-noded
   cd ${root_dir}/ascend-noded || exit 1
+  sed -i "s@ubuntu:22.04@${base_image}@g" Dockerfile
   docker build --no-cache -t noded:v${version} ./
 }
 
@@ -43,6 +54,7 @@ build_ascend_operator(){
   cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-ascend-operator_${version}_linux-${arch}.zip -d ascend-operator
   cd ${root_dir}/ascend-operator || exit 1
+    sed -i "s@ubuntu:22.04@${base_image}@g" Dockerfile
   docker build --no-cache -t ascend-operator:v${version} ./
 }
 
@@ -51,6 +63,7 @@ build_device_plugin(){
   unzip Ascend-mindxdl-device-plugin_${version}_linux-${arch}.zip -d ascend-device-plugin
   cd ${root_dir}/ascend-device-plugin || exit 1
   cp ${root_dir}/Dockerfile-dp-common ./
+  sed -i "s@ubuntu:22.04@${base_image}@g" Dockerfile-dp-common
   docker build --no-cache -t ascend-k8sdeviceplugin:v${version} -f Dockerfile-dp-common .
 }
 
@@ -59,6 +72,7 @@ build_npu_exporter(){
   unzip Ascend-mindxdl-npu-exporter_${version}_linux-${arch}.zip -d ascend-npu-exporter
   cd ${root_dir}/ascend-npu-exporter || exit 1
   cp ${root_dir}/Dockerfile-exporter-common ./
+  sed -i "s@ubuntu:22.04@${base_image}@g" Dockerfile-exporter-common
   docker build --no-cache -t npu-exporter:v${version} -f Dockerfile-exporter-common .
 }
 
@@ -66,17 +80,22 @@ build_clusterd(){
   cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-clusterd_${version}_linux-${arch}.zip -d clusterd
   cd ${root_dir}/clusterd || exit 1
+  sed -i "s@ubuntu:22.04@${base_image}@g" Dockerfile
   docker build --no-cache -t clusterd:v${version}  .
 }
 
 build_volcano_v1.7(){
   cd ${root_dir}/ascend-volcano-plugin/volcano-v1.7.0 || exit 1
+  sed -i "s@alpine:latest@${alpine_image}@g" ./Dockerfile-scheduler
+  sed -i "s@alpine:latest@${alpine_image}@g" ./Dockerfile-controller
   docker build --no-cache -t volcanosh/vc-scheduler:v1.7.0 ./ -f ./Dockerfile-scheduler
   docker build --no-cache -t volcanosh/vc-controller-manager:v1.7.0 ./ -f ./Dockerfile-controller
 }
 
 build_volcano_v1.9(){
   cd ${root_dir}/ascend-volcano-plugin/volcano-v1.9.0 || exit 1
+  sed -i "s@alpine:latest@${alpine_image}@g" ./Dockerfile-scheduler
+  sed -i "s@alpine:latest@${alpine_image}@g" ./Dockerfile-controller
   docker build --no-cache -t volcanosh/vc-scheduler:v1.9.0 ./ -f ./Dockerfile-scheduler
   docker build --no-cache -t volcanosh/vc-controller-manager:v1.9.0 ./ -f ./Dockerfile-controller
 }
@@ -88,7 +107,23 @@ build_volcano(){
   build_volcano_v1.9
 }
 
+get_image_resource(){
+  flag=$(cat /usr1/mindxdl_package/version)
+  if [[ $flag == $version ]];then
+      return
+  fi
+  rm -rf /usr1/mindxdl_package/*
+  wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-noded_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
+  wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-npu-exporter_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
+  wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-ascend-operator_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
+  wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-clusterd_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
+  wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-device-plugin_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
+  wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-volcano_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
+  echo $version > /usr1/mindxdl_package/version
+}
+
 main(){
+  get_image_resource
   cp /usr1/mindxdl_package/* ${root_dir}/
   case $1 in
   "all")
@@ -96,8 +131,6 @@ main(){
   build_volcano
   build_npu_exporter
   build_noded
-  build_resilience_controller
-  build_hccl_controller
   build_ascend_operator
   build_clusterd
     ;;
@@ -115,9 +148,6 @@ main(){
     ;;
   "resilience-controller")
   build_resilience_controller
-    ;;
-  "hccl-controller")
-  build_hccl_controller
     ;;
   "ascend-operator")
   build_ascend_operator
