@@ -39,6 +39,11 @@ push_ascend_operator(){
   docker push ${repository}/ascend-operator:v${version}-${ARCH}
 }
 
+push_infer_operator(){
+  docker tag infer-operator:v${version} ${repository}/infer-operator:v${version}-${ARCH}
+  docker push ${repository}/infer-operator:v${version}-${ARCH}
+}
+
 push_device_plugin(){
   docker tag ascend-k8sdeviceplugin:v${version} ${repository}/ascend-k8sdeviceplugin:v${version}-${ARCH}
   docker push ${repository}/ascend-k8sdeviceplugin:v${version}-${ARCH}
@@ -75,6 +80,7 @@ main(){
   push_noded
   push_resilience_controller
   push_ascend_operator
+  push_infer_operator
   push_clusterd
     ;;
   "ascend-device-plugin")
@@ -94,6 +100,9 @@ main(){
     ;;
   "ascend-operator")
   push_ascend_operator
+    ;;
+  "infer-operator")
+  push_infer_operator
     ;;
   "clusterd")
   push_clusterd

@@ -58,6 +58,14 @@ build_ascend_operator(){
   docker build --no-cache -t ascend-operator:v${version} ./
 }
 
+build_infer_operator(){
+  cd ${root_dir} ||  exit 1
+  unzip Ascend-mindxdl-infer-operator_${version}_linux-${arch}.zip -d infer-operator
+  cd ${root_dir}/infer-operator || exit 1
+    sed -i "s@ubuntu:22.04@${base_image}@g" Dockerfile
+  docker build --no-cache -t infer-operator:v${version} ./
+}
+
 build_device_plugin(){
   cd ${root_dir} ||  exit 1
   unzip Ascend-mindxdl-device-plugin_${version}_linux-${arch}.zip -d ascend-device-plugin
@@ -132,6 +140,7 @@ main(){
   build_npu_exporter
   build_noded
   build_ascend_operator
+  build_infer_operator
   build_clusterd
     ;;
   "ascend-device-plugin")
@@ -151,6 +160,9 @@ main(){
     ;;
   "ascend-operator")
   build_ascend_operator
+    ;;
+  "infer-operator")
+  build_infer_operator
     ;;
   "clusterd")
   build_clusterd
