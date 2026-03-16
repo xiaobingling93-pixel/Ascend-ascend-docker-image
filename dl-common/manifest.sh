@@ -37,6 +37,11 @@
   swr.cn-east-3.myhuaweicloud.com/ascendhub-test/ascend-operator:${version}-arm64
   docker manifest push --insecure swr.cn-east-3.myhuaweicloud.com/ascendhub-test/ascend-operator:${version}
 
+  docker manifest create --insecure swr.cn-east-3.myhuaweicloud.com/ascendhub-test/infer-operator:${version} \
+  swr.cn-east-3.myhuaweicloud.com/ascendhub-test/infer-operator:${version}-x86 \
+  swr.cn-east-3.myhuaweicloud.com/ascendhub-test/infer-operator:${version}-arm64
+  docker manifest push --insecure swr.cn-east-3.myhuaweicloud.com/ascendhub-test/infer-operator:${version}
+
   docker manifest create --insecure swr.cn-east-3.myhuaweicloud.com/ascendhub-test/vc-controller-manager:v1.9.0-${version} \
   swr.cn-east-3.myhuaweicloud.com/ascendhub-test/vc-controller-manager:v1.9.0-x86 \
   swr.cn-east-3.myhuaweicloud.com/ascendhub-test/vc-controller-manager:v1.9.0-arm64
