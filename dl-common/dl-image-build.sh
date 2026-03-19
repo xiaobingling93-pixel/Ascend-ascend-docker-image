@@ -124,6 +124,7 @@ get_image_resource(){
   wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-noded_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
   wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-npu-exporter_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
   wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-ascend-operator_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
+  wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-infer-operator_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
   wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-clusterd_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
   wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-device-plugin_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
   wget https://gitcode.com/ascend/mind-cluster/releases/download/v${version}/Ascend-mindxdl-volcano_${version}_linux-$(arch).zip -P /usr1/mindxdl_package/
