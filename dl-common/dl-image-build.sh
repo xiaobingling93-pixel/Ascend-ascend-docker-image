@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-version=7.3.0
+version=26.0.0
 root_dir=$(pwd $0)
 arch=$(arch)
 
@@ -33,14 +33,6 @@ else
   ARCH=arm64
   alpine_image=swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/alpine:latest-linuxarm64
 fi
-
-build_resilience_controller(){
-  cd ${root_dir} ||  exit 1
-  unzip Ascend-mindxdl-resilience-controller_${version}_linux-${arch}.zip -d resilience-controller
-  cd ${root_dir}/resilience-controller || exit 1
-  sed -i "s@ubuntu:22.04@${base_image}@g" Dockerfile
-  docker build --no-cache -t resilience-controller:v${version} ./
-}
 
 build_noded(){
   cd ${root_dir} ||  exit 1
@@ -155,9 +147,6 @@ main(){
     ;;
   "noded")
   build_noded
-    ;;
-  "resilience-controller")
-  build_resilience_controller
     ;;
   "ascend-operator")
   build_ascend_operator
