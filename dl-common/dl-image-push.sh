@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-version=7.3.0
+version=26.0.0
 arch=$(arch)
 if [[ ${arch} == "x86_64" ]];then
   ARCH=x86
@@ -23,11 +23,6 @@ else
 fi
 
 repository=swr.cn-east-3.myhuaweicloud.com/ascendhub-test
-
-push_resilience_controller(){
-  docker tag resilience-controller:v${version} ${repository}/resilience-controller:v${version}-${ARCH}
-  docker push ${repository}/resilience-controller:v${version}-${ARCH}
-}
 
 push_noded(){
   docker tag noded:v${version} ${repository}/noded:v${version}-${ARCH}
@@ -78,7 +73,6 @@ main(){
   push_volcano
   push_npu_exporter
   push_noded
-  push_resilience_controller
   push_ascend_operator
   push_infer_operator
   push_clusterd
@@ -94,9 +88,6 @@ main(){
     ;;
   "noded")
   push_noded
-    ;;
-  "resilience-controller")
-  push_resilience_controller
     ;;
   "ascend-operator")
   push_ascend_operator
